@@ -1,0 +1,11 @@
+{
+  "fixture_label": "SYNTHETIC FROZEN EVIDENCE — NOT A REAL SOURCE",
+  "question": "clinical_effect",
+  "url": "https://north-trial.example.invalid/frozen/2025-01",
+  "published": "2025-01-15",
+  "design": "randomized trial",
+  "population": "comparable-risk adults at North",
+  "outcome": "30-day unplanned readmission",
+  "effect_percentage_points": -4.2,
+  "note": "negative values favor the program"
+}

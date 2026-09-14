@@ -1,0 +1,27 @@
+{
+  "evidence_kind": "synthetic_frozen",
+  "questions": {
+    "clinical_effect": {
+      "answer": "benefit_supported_for_comparable_north_adults",
+      "effect_pp": {"trial": -4.2, "audit_headline": 1.1, "audit_comparable": -3.8},
+      "resolution": "population_scope_shift",
+      "citations": [
+        {"url": "https://north-trial.example.invalid/frozen/2025-01", "published": "2025-01-15"},
+        {"url": "https://north-audit.example.invalid/frozen/2025-04", "published": "2025-04-20"}
+      ]
+    },
+    "cost_target": {
+      "answer": "target_missed",
+      "reported_cents": 118,
+      "omitted_mandatory_cents": 9,
+      "all_in_cents": 127,
+      "target_cents": 120,
+      "resolution": "all_in_cost_includes_mandatory_license",
+      "citations": [
+        {"url": "https://rollout-dashboard.example.invalid/frozen/2025-05", "published": "2025-05-03"},
+        {"url": "https://procurement-ledger.example.invalid/frozen/2025-05", "published": "2025-05-06"}
+      ]
+    }
+  },
+  "limitations": ["synthetic_fixture_not_real_world_evidence"]
+}

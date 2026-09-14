@@ -1,0 +1,1 @@
+Synthesized both independent questions from synthetic frozen evidence. Checked all four URLs and dates, reconciled the clinical contradiction by population scope, and resolved the cost contradiction using the all-in accounting basis.

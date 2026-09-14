@@ -1,0 +1,23 @@
+# Codex runtime state that should never be committed to this repository.
+.codex/auth.json
+.codex/*.sqlite
+.codex/*.sqlite-*
+.codex/sessions/
+.codex/logs/
+.codex/memories/
+.codex/attachments/
+.codex/generated_images/
+.codex/browser/
+.codex/computer-use/
+.codex/plugins/
+
+# Local tooling and operating-system files.
+.DS_Store
+Thumbs.db
+__pycache__/
+*.py[cod]
+
+# Raw CLI transcripts contain disposable workspace paths and session IDs.
+# Keep summarized, sanitized evidence instead.
+evals/results/**/*.jsonl
+validation/**/*.jsonl

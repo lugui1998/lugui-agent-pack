@@ -1,0 +1,8 @@
+{
+  "fixture_label": "SYNTHETIC FROZEN EVIDENCE — NOT A REAL SOURCE",
+  "question": "cost_target",
+  "url": "https://procurement-ledger.example.invalid/frozen/2025-05",
+  "published": "2025-05-06",
+  "mandatory_platform_license_cents_per_patient": 9,
+  "accounting_instruction": "include this recurring mandatory charge in all-in operating cost"
+}

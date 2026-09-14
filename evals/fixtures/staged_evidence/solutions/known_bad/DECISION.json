@@ -1,0 +1,9 @@
+{
+  "decision": "hold_for_archive",
+  "release": "Atlas",
+  "version": "4.1.9",
+  "record_date": "2026-08-01",
+  "source_url": "https://release-archive.example.invalid/atlas/4.1.9",
+  "evidence_basis": "archive_authoritative",
+  "limitations": ["Archive evidence is available."]
+}

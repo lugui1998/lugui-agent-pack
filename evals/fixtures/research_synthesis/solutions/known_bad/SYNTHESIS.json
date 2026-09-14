@@ -1,0 +1,21 @@
+{
+  "evidence_kind": "synthetic_frozen",
+  "questions": {
+    "clinical_effect": {
+      "answer": "program_increased_readmissions",
+      "effect_pp": {"trial": -4.2, "audit_headline": 1.1, "audit_comparable": -3.8},
+      "resolution": "latest_headline_wins",
+      "citations": [{"url": "https://north-audit.example.invalid/frozen/2025-04", "published": "2025-04-20"}]
+    },
+    "cost_target": {
+      "answer": "target_met",
+      "reported_cents": 118,
+      "omitted_mandatory_cents": 0,
+      "all_in_cents": 118,
+      "target_cents": 120,
+      "resolution": "dashboard_total_used",
+      "citations": [{"url": "https://rollout-dashboard.example.invalid/frozen/2025-05", "published": "2025-05-03"}]
+    }
+  },
+  "limitations": ["synthetic_fixture_not_real_world_evidence"]
+}

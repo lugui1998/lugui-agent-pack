@@ -1,0 +1,9 @@
+{
+  "selected_protocol": "v1_flat",
+  "target_gateway": "2.3",
+  "required_capability": "envelope_v2",
+  "source_scopes": {"source_v1.json": "target gateway 2.3", "source_v2.json": "target gateway 2.3"},
+  "acceptance_shape": {"protocol": "v1", "request_id": "request-id", "body": "body"},
+  "disagreement_resolution": "Use the older flat request.",
+  "validation_command": "python check_migration.py ."
+}

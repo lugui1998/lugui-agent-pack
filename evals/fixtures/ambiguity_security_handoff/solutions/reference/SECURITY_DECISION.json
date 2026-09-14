@@ -1,0 +1,9 @@
+{
+  "decision": "Resolve the existing portion and compare path components before appending validated missing segments.",
+  "containment_primitive": "path_is_relative_to",
+  "symlink_policy": "allow_only_resolved_within_root",
+  "missing_leaf_policy": "resolve_longest_existing_ancestor",
+  "decode_policy": "caller_once_no_second_decode",
+  "constraints_preserved": ["C1", "C2", "C3", "C4", "C5", "C6", "C7"],
+  "acceptance_cases": {"T1": "accept", "T2": "accept", "T3": "reject", "T4": "reject", "T5": "reject", "T6": "reject", "T7": "accept"}
+}

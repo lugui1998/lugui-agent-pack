@@ -1,0 +1,9 @@
+{
+  "evidence_kind": "synthetic_authoritative_release",
+  "release": "Atlas",
+  "version": "4.2.1",
+  "record_date": "2026-09-10",
+  "source_url": "https://release-record.example.invalid/atlas/4.2.1",
+  "status": "approved",
+  "required_action": "ship_current"
+}

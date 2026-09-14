@@ -1,0 +1,9 @@
+{
+  "fixture_label": "SYNTHETIC FROZEN EVIDENCE — NOT A REAL SOURCE",
+  "question": "cost_target",
+  "url": "https://rollout-dashboard.example.invalid/frozen/2025-05",
+  "published": "2025-05-03",
+  "reported_operating_cost_cents_per_patient": 118,
+  "target_cents_per_patient": 120,
+  "footnote": "reported cost excludes the mandatory platform license"
+}

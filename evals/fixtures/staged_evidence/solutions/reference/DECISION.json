@@ -1,0 +1,12 @@
+{
+  "decision": "ship_current",
+  "release": "Atlas",
+  "version": "4.2.1",
+  "record_date": "2026-09-10",
+  "source_url": "https://release-record.example.invalid/atlas/4.2.1",
+  "evidence_basis": "current_record_authoritative",
+  "limitations": [
+    "The archive lookup is stale evidence and may be cancelled once redundant.",
+    "The archive command has a fixed 75-second delay for the scheduling probe."
+  ]
+}

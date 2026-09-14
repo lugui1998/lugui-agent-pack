@@ -1,0 +1,1 @@
+{"target_gateway":"2.3","required_capability":"envelope_v2","accepted_shape":{"protocol":"v2","request_id":"request-id","body":"body"},"flat_shape":"rejected","network":"synthetic_offline"}

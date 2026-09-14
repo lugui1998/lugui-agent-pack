@@ -1,0 +1,140 @@
+version = 2
+
+[runner_contract]
+workspace_subdir = "workspace"
+prompt_field = "prompt"
+checks_field = "checks"
+role_overrides_field = "copied_role_overrides"
+observation_field = "observation_rubric"
+
+[scenarios.staged_evidence]
+description = "Forced scheduling probe: validate authoritative evidence without waiting for a redundant, intentionally delayed archive lookup."
+coordination_mode = "forced_scheduling"
+fixture_dir = "evals/fixtures/staged_evidence"
+prompt = "Follow BRIEF.md as a forced scheduling probe. Launch the two specified docs_researcher children in parallel, with separate current-record and archive assignments. After current evidence arrives, create DECISION.json and EVAL_REPORT.md, run python check_decision.py DECISION.json immediately without waiting for the archive, then stop the archive child if it is still running and redundant. Preserve the input and check scripts. Use real returned IDs and tool results for any scheduling claims. The archive command's fixed 75-second latency is an explicit control for this probe; it is not a model-speed benchmark."
+checks = [
+  { kind = "external_command", argv = ["{python}", "{fixture_dir}/oracle.py", "{workspace}"], timeout_seconds = 10 },
+]
+observation_rubric = [
+  { id = "real-independent-children", source = "codex_event_stream", required = true, criterion = "Two actual docs_researcher children start independently; the archive child invokes the unmodified delayed command. Tool records, not workspace labels, establish activity." },
+  { id = "newly-unblocked-check", source = "codex_event_stream", required = true, criterion = "The parent uses the current child's returned evidence and starts the visible decision validation while the unrelated archive lookup is still pending." },
+  { id = "redundant-work-stopped", source = "codex_event_stream", required = true, criterion = "After decisive validation, the parent cancels/closes the redundant archive child if still running, without consuming its stale result as current evidence. Already-completed archive work does not prove cancellation behavior." },
+  { id = "owned-process-cleanup", source = "codex_event_stream", required = true, criterion = "No task-owned archive process remains after the run; actual process/lifecycle evidence is required, not the report's assertion." },
+]
+
+[scenarios.parallel_modules]
+description = "Independent pricing and tax modules share a cents-based contract; invoice validation depends on both implementations."
+coordination_mode = "autonomous"
+fixture_dir = "evals/fixtures/parallel_modules"
+prompt = "Implement pricing.py and taxes.py from REQUIREMENTS.md without changing contracts.py or check_integration.py. Confirm the shared cents-based interface. Run the existing checks with python check_integration.py after both modules are ready, and write EVAL_REPORT.md with the result and any delegation used. Choose the routing and fanout by required judgment and useful work versus overhead; the modules being independent does not require subagents. Preserve exclusive ownership if you delegate edits."
+checks = [
+  { kind = "external_command", argv = ["{python}", "{fixture_dir}/oracle.py", "{workspace}"], timeout_seconds = 10 },
+]
+observation_rubric = [
+  { id = "independent-readiness", source = "codex_event_stream", required = true, criterion = "If module work is delegated, pricing and tax assignments are independently ready and have non-overlapping file ownership." },
+  { id = "real-overlap", source = "codex_event_stream", required = false, criterion = "When capacity permits, actual child-agent or tool timestamps show useful overlap; workspace-authored timestamps or trace files are inadmissible." },
+  { id = "integration-dependency", source = "codex_event_stream", required = true, criterion = "The combined invoice check begins only after both module results needed by it are available." },
+]
+
+[scenarios.parallel_writes_probe]
+description = "Forced parallel-edit probe using the same pricing/tax requirements and combined invoice oracle."
+coordination_mode = "forced_parallel"
+fixture_dir = "evals/fixtures/parallel_modules"
+prompt = "Read REQUIREMENTS.md and confirm the shared contracts.py interface. Assign pricing.py and taxes.py to two worker subagents with exclusive ownership, then launch those independent implementations in parallel. Each worker may change only its owned module and should return its targeted check results. Keep contracts.py unchanged. The main agent owns invoice.py integration and EVAL_REPORT.md: after both worker results arrive, check their combined behavior and create the report with real agent IDs, ownership, and validation evidence. Do not describe shell commands as subagents."
+checks = [
+  { kind = "external_command", argv = ["{python}", "{fixture_dir}/oracle.py", "{workspace}"], timeout_seconds = 10 },
+]
+observation_rubric = [
+  { id = "parallel-workers", source = "codex_event_stream", required = true, criterion = "Two real worker agents with disjoint pricing.py/taxes.py ownership launch before either completes; actual task intervals overlap." },
+  { id = "exclusive-writes", source = "codex_event_stream", required = true, criterion = "Each worker changes only its assigned module; the protected shared contract remains unchanged." },
+  { id = "combined-validation", source = "codex_event_stream", required = true, criterion = "The main agent validates invoice behavior after both module results arrive and produces the report from actual returned evidence." },
+]
+
+[scenarios.ambiguity_security_handoff]
+description = "A failed path-boundary approach and exact deployment constraints require direct security-specialist analysis before any protected-code change."
+coordination_mode = "forced_specialist"
+fixture_dir = "evals/fixtures/ambiguity_security_handoff"
+prompt = "Read INCIDENT.md and pathguard.py. Preserve every stated constraint and the failed evidence in a bounded handoff to a security_reviewer. Ask that specialist to resolve the listed policy decisions and propose acceptance cases. Do not edit pathguard.py. Using the returned analysis, create SECURITY_DECISION.json following the schema in INCIDENT.md. Also create EVAL_REPORT.md describing the work, delegation, and checks. Both files are required outputs."
+checks = [
+  { kind = "external_command", argv = ["{python}", "{fixture_dir}/oracle.py", "{workspace}"], timeout_seconds = 10 },
+]
+observation_rubric = [
+  { id = "direct-security-route", source = "codex_event_stream", required = true, criterion = "A real security_reviewer assignment occurs directly, without a fabricated handoff file standing in for agent activity." },
+  { id = "complete-handoff", source = "codex_event_stream", required = true, criterion = "The assignment carries the failed approach, all deployment constraints, protected-file rule, and exact unresolved decisions." },
+  { id = "specialist-used", source = "codex_event_stream", required = true, criterion = "The final structured decision follows the specialist result; a prewritten workspace answer or self-authored specialist transcript is inadmissible." },
+]
+
+[scenarios.ambiguity_security_autonomous]
+description = "Autonomous-routing counterpart for the same consequential path-boundary evidence and decision oracle."
+coordination_mode = "autonomous"
+fixture_dir = "evals/fixtures/ambiguity_security_handoff"
+prompt = "Read INCIDENT.md and pathguard.py. Resolve every listed policy decision, preserve all exact constraints and failed evidence, and do not edit pathguard.py. Choose the routing and analysis process appropriate for this consequential security question. Create SECURITY_DECISION.json following the schema in INCIDENT.md. Also create EVAL_REPORT.md describing the work, delegation, and checks. Both files are required outputs."
+checks = [
+  { kind = "external_command", argv = ["{python}", "{fixture_dir}/oracle.py", "{workspace}"], timeout_seconds = 10 },
+]
+observation_rubric = [
+  { id = "consequential-routing", source = "codex_event_stream", required = true, criterion = "Assess whether the supplied exact semantics suffice for correct bounded local analysis or leave consequential uncertainty requiring a suitable specialist. A specialist is not mandatory merely because this is a security-labeled fixture. Any claim that delegation is unavailable requires actual discovery or runtime failure evidence." },
+  { id = "evidence-transfer", source = "codex_event_stream", required = false, criterion = "If delegated, the assignment preserves the failed approaches, all deployment constraints, protected-file rule, and unresolved decisions." },
+  { id = "decision-after-analysis", source = "codex_event_stream", required = true, criterion = "The structured decision follows the actual analysis used; workspace-authored specialist transcripts or route claims are inadmissible." },
+]
+
+[scenarios.research_synthesis]
+description = "Two independent questions use clearly synthetic frozen source packets; one contains a population-scope contradiction and the other a cost-accounting contradiction."
+coordination_mode = "autonomous"
+fixture_dir = "evals/fixtures/research_synthesis"
+prompt = "Answer the two questions in RESEARCH_BRIEF.md using only the labeled synthetic frozen packets under evidence/. Produce SYNTHESIS.json in the required schema and EVAL_REPORT.md. Retain each source URL and publication date, distinguish adjusted from headline claims, and resolve contradictions by scope and accounting basis. Choose the amount of delegation yourself; there is no required fanout count."
+checks = [
+  { kind = "external_command", argv = ["{python}", "{fixture_dir}/oracle.py", "{workspace}"], timeout_seconds = 10 },
+]
+observation_rubric = [
+  { id = "question-scope", source = "codex_event_stream", required = true, criterion = "Any research assignments are scoped by the two independent questions rather than arbitrary source-count fanout." },
+  { id = "evidence-before-synthesis", source = "codex_event_stream", required = true, criterion = "Final synthesis follows retrieval or analysis of both questions and explicitly handles the contradictions." },
+  { id = "no-live-browsing", source = "codex_event_stream", required = true, criterion = "No network search is used because the prompt limits evidence to frozen local packets." },
+]
+
+[scenarios.research_coordinator_comparison]
+description = "Forced coordinator comparison using the same frozen research task and oracle as the autonomous research scenario."
+coordination_mode = "forced_coordinator"
+fixture_dir = "evals/fixtures/research_synthesis"
+prompt = "This is a forced coordinator comparison. Assign the complete RESEARCH_BRIEF.md task to web_coordinator. Require that coordinator to create two bounded child assignments, one for each independent question, using only the local synthetic frozen packets and no live browsing; then have it synthesize the returned evidence. Use that result to produce SYNTHESIS.json in the brief's schema and EVAL_REPORT.md."
+checks = [
+  { kind = "external_command", argv = ["{python}", "{fixture_dir}/oracle.py", "{workspace}"], timeout_seconds = 10 },
+]
+observation_rubric = [
+  { id = "forced-coordinator", source = "codex_event_stream", required = true, criterion = "A real web_coordinator assignment receives the complete research brief." },
+  { id = "nested-question-assignments", source = "codex_event_stream", required = true, criterion = "The coordinator creates two real, non-overlapping child assignments corresponding to the two questions; model-authored trace files are inadmissible." },
+  { id = "coordinator-synthesis", source = "codex_event_stream", required = true, criterion = "The coordinator synthesizes after both child results and returns that synthesis to the root task before final artifacts are written." },
+  { id = "no-live-browsing", source = "codex_event_stream", required = true, criterion = "Neither coordinator nor children use network search because evidence is frozen locally." },
+]
+
+[scenarios.unavailable_role_fallback]
+description = "A copied fast_scan role names a syntactically valid but unavailable fixture model, requiring a real failed spawn followed by a capability-preserving fallback."
+coordination_mode = "forced_probe"
+fixture_dir = "evals/fixtures/unavailable_role_proposal"
+prompt = "Assign the bounded extraction in REQUEST.md to fast_scan first. The scenario runner has copied an isolated role override; make an actual spawn attempt and rely on the tool result rather than assuming availability. If that attempt fails because the model is unavailable, retry the same bounded assignment with the documented capability-preserving explorer fallback. Use actual returned evidence to write RESULT.json and EVAL_REPORT.md. Do not create an availability report or synthetic tool transcript."
+checks = [
+  { kind = "external_command", argv = ["{python}", "{fixture_dir}/oracle.py", "{workspace}"], timeout_seconds = 10 },
+]
+copied_role_overrides = [
+  { role = "fast_scan", source = "evals/fixtures/unavailable_role_proposal/role_overrides/fast_scan.toml", destination = ".codex/agents/fast_scan.toml" },
+]
+observation_rubric = [
+  { id = "actual-unavailable-probe", source = "codex_event_stream", required = true, criterion = "A real fast_scan spawn or activation attempt fails with model-unavailable evidence from the runtime." },
+  { id = "fallback-after-failure", source = "codex_event_stream", required = true, criterion = "An explorer assignment with the same bounded extraction starts only after the unavailable result." },
+  { id = "fallback-result-used", source = "codex_event_stream", required = true, criterion = "The parent uses the explorer's returned evidence; workspace-authored availability JSON or fabricated events are inadmissible." },
+]
+
+[scenarios.conflicting_contracts]
+description = "Controlled one-child-capacity workflow: actual scoped contract recommendations, a real failed initial check, and a bounded planning handoff before root implementation."
+coordination_mode = "forced_probe"
+fixture_dir = "evals/fixtures/conflicting_contracts"
+prompt = "Follow BRIEF.md for this controlled workflow probe. Use the initial migration.py to capture an actual failed python check_migration.py . result. Launch the two actual docs_researcher assignments with the specified source scopes, one active child at a time, prioritizing protocol prerequisites before presentation work. Reconcile their actual recommendations using target acceptance evidence; if they conflict, send both reports and the failed check to one planner for the specified acceptance-plan verification. The root owns migration.py and all final deliverables. Do not fabricate disagreement if the returned recommendations agree. Preserve protected inputs/checker and create all required outputs. This forced workflow tests handoff and scheduling mechanisms, not whether this small adapter intrinsically needs a stronger model."
+checks = [
+  { kind = "external_command", argv = ["{python}", "{fixture_dir}/oracle.py", "{workspace}"], timeout_seconds = 10 },
+]
+observation_rubric = [
+  { id = "capacity-and-priority", source = "codex_event_stream", required = true, criterion = "Actual prerequisite research launches before presentation work; no more than one child is active at a time, including a subsequent planner." },
+  { id = "real-conflicting-recommendations", source = "codex_event_stream", required = true, criterion = "Two real source-scoped research children return incompatible wire-format recommendations for the same target. Compatible recommendations or source files alone do not establish this behavior; preserve that limitation if it occurs." },
+  { id = "failed-check-handoff", source = "codex_event_stream", required = true, criterion = "The initial adapter actually fails the visible checker; a real planner assignment after conflicting returned evidence carries the failure, both source reports, target constraints, root ownership and required acceptance checks." },
+  { id = "root-acceptance", source = "codex_event_stream", required = true, criterion = "The root uses decisive evidence and returned planning, implements the bounded adapter, and validates the changed state once without repeating an unchanged successful check or entire research assignments." },
+]

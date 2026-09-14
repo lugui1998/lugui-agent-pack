@@ -1,0 +1,20 @@
+{
+  "captured": "2026-09-12",
+  "mainModelFromInspectedGlobalConfig": "gpt-6-astra",
+  "mainEffortFromInspectedGlobalConfig": "ultra",
+  "files": {
+    "AGENTS.md": "d85473df50c62d800dd547da0ca163609d054644aeb74345802ade902fa8a091",
+    ".codex/config.toml": "c8bddc8b142400b0d0fb1b3e6b0023888047505a0b0ab27f139d22b68e18d744",
+    ".codex/agents/deep_explorer.toml": "9b8931eb98d31031bad2002162658d8dfe18840a4c0957c038993811e979817e",
+    ".codex/agents/docs_researcher.toml": "b6f0cf1dc99e2489317d22ac80415559999f4c095a18b78da41720ba4e523366",
+    ".codex/agents/explorer.toml": "f2d1d30dfee6f2aef310e3fb51dd8e57d80c8036befa539ada6c0c28beda7b0b",
+    ".codex/agents/fast_scan.toml": "6ea43e1603ae3d4e5bd3514ebaec1b7a2c8c22526cd7564558f9a1c6852d8a70",
+    ".codex/agents/reviewer.toml": "4f552603b7b70ee699c418dc7131a1a59d416a05b849b222a7a9e6d228dc44a4",
+    ".codex/agents/security_reviewer.toml": "abe7d4c110e7531c4e1f521648ce388be1b7ffa4a11556dfc2a76e95f89a86af",
+    ".codex/agents/test_runner.toml": "8b69bdc2f3e855e0c2d43f9f71c0c3ca0bf49619298505898c25863e6ea0a8eb",
+    ".codex/agents/web_coordinator.toml": "940318f115bf76bb635b1385e910dc03e6c294b637fcd462060570c002124df9",
+    ".codex/agents/web_searcher.toml": "5ec749a14b62ea74c9530ff588d5f0d55d354ebf280f8f3ea9ff06c517bbad7b",
+    ".codex/agents/web_verifier.toml": "1fbb2d161647d192ea53145a49e246cbd6c039215bb3086086c744eafa94b588",
+    ".codex/agents/worker.toml": "66e7191e23e90e21acac7106a79f1b3c4fb6ad187883a6f6569cf07d7d41f338"
+  }
+}

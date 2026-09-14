@@ -1,0 +1,9 @@
+{
+  "decision": "Normalize strings and compare prefixes.",
+  "containment_primitive": "string_prefix",
+  "symlink_policy": "allow_all",
+  "missing_leaf_policy": "lexical_join",
+  "decode_policy": "decode_again",
+  "constraints_preserved": ["C1", "C2", "C7"],
+  "acceptance_cases": {"T1": "accept", "T2": "accept", "T3": "reject", "T4": "reject", "T5": "accept", "T6": "accept", "T7": "accept"}
+}

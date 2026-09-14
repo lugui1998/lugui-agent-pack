@@ -1,0 +1,3 @@
+[submodule ".agents/skills/stop-slop"]
+	path = .agents/skills/stop-slop
+	url = https://github.com/hardikpandya/stop-slop

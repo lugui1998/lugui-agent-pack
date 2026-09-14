@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-12",
+  "targetCodex": "0.154.0-alpha.6.2",
+  "main": {"model": "gpt-5.6-luna", "effort": "medium"},
+  "defaultSubagent": {"model": "gpt-5.6-luna", "effort": "low"},
+  "maxConcurrent": 16,
+  "maxDepth": 2,
+  "roles": [
+    {"name":"fast_scan","model":"gpt-5.3-codex-spark","effort":"low","template":"extract","sandbox":"read-only","fallbacks":["explorer"],"description":"Spark: bounded text searches and extraction; use explorer if unavailable."},
+    {"name":"explorer","model":"gpt-5.6-luna","effort":"low","template":"extract","sandbox":"read-only","fallbacks":[],"description":"Luna: locate files, callers, configuration and evidence; return searched scope."},
+    {"name":"deep_explorer","model":"gpt-5.6-sol","effort":"high","template":"investigate","sandbox":"read-only","fallbacks":["expert"],"description":"Sol: investigate ambiguous behavior and interactions across components."},
+    {"name":"worker","model":"gpt-5.6-luna","effort":"medium","template":"implement","sandbox":"workspace-write","fallbacks":["standard_worker"],"description":"Luna: straightforward edits with understood behavior and targeted checks."},
+    {"name":"standard_worker","model":"gpt-5.6-terra","effort":"medium","template":"implement","sandbox":"workspace-write","fallbacks":["complex_worker"],"description":"Terra: bounded implementation needing interpretation of established patterns."},
+    {"name":"complex_worker","model":"gpt-5.6-sol","effort":"high","template":"implement","sandbox":"workspace-write","fallbacks":["expert_worker"],"description":"Sol: complex implementation, difficult diagnosis and interacting behavior."},
+    {"name":"expert_worker","model":"gpt-6-astra","effort":"high","template":"implement","sandbox":"workspace-write","fallbacks":[],"description":"Astra: hardest implementation or unresolved consequential failures; own diagnosis through validation."},
+    {"name":"test_runner","model":"gpt-5.6-luna","effort":"low","template":"test","sandbox":"workspace-write","fallbacks":["test_diagnostician"],"description":"Luna: run known checks and collect failures; do not change source code."},
+    {"name":"test_diagnostician","model":"gpt-5.6-terra","effort":"medium","template":"test","sandbox":"workspace-write","fallbacks":[],"description":"Terra: reproduce and diagnose failures, including environment problems; do not change source code."},
+    {"name":"reviewer","model":"gpt-5.6-luna","effort":"medium","template":"review","sandbox":"read-only","fallbacks":["deep_reviewer"],"description":"Luna: scoped routine review against explicit requirements and checks."},
+    {"name":"deep_reviewer","model":"gpt-5.6-sol","effort":"high","template":"review","sandbox":"read-only","fallbacks":["expert"],"description":"Sol: consequential correctness, subtle regressions and integration review."},
+    {"name":"security_reviewer","model":"gpt-5.6-sol","effort":"high","template":"security","sandbox":"read-only","fallbacks":["expert"],"description":"Sol: security-sensitive trust boundaries with concrete exploit and impact evidence."},
+    {"name":"planner","model":"gpt-5.6-sol","effort":"high","template":"plan","sandbox":"read-only","fallbacks":["expert"],"description":"Sol: resolve uncertain decomposition; return assignments, dependencies and acceptance checks."},
+    {"name":"expert","model":"gpt-6-astra","effort":"high","template":"expert","sandbox":"read-only","fallbacks":[],"description":"Astra: hardest planning, diagnosis or review; resolve consequential uncertainty and specialist disagreement."},
+    {"name":"docs_researcher","model":"gpt-5.6-luna","effort":"low","template":"research","sandbox":"read-only","fallbacks":[],"description":"Luna: focused source lookup, API/version verification and evidence packets."},
+    {"name":"web_searcher","model":"gpt-5.3-codex-spark","effort":"low","template":"research","sandbox":"read-only","fallbacks":["docs_researcher"],"description":"Spark: one bounded research angle; use docs_researcher if unavailable."},
+    {"name":"web_coordinator","model":"gpt-5.6-luna","effort":"medium","template":"coordinate","sandbox":"read-only","fallbacks":[],"description":"Luna: isolate substantial research coordination; delegate independent questions and process results as they arrive."},
+    {"name":"web_verifier","model":"gpt-5.6-sol","effort":"high","template":"verify","sandbox":"read-only","fallbacks":["expert"],"description":"Sol: verify disputed, consequential or weakly supported claims with targeted follow-up sources."}
+  ]
+}

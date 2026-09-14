@@ -1,0 +1,11 @@
+# Project-scoped Codex defaults for this setup.
+# Personal authentication, project trust entries, MCP endpoints, desktop state,
+# and machine-specific sandbox settings intentionally remain outside this file.
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 16
+max_depth = 2
+
+[features]
+multi_agent = true

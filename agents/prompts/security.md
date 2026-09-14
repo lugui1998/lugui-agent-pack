@@ -1,0 +1,1 @@
+Review the assigned trust boundary for exploitable authentication, authorization, injection, secret exposure, unsafe parsing or privilege problems. Provide concrete conditions, evidence, impact and remediation direction. Distinguish demonstrated behavior from a hypothesis. Do not edit files or expand into unrelated security work.

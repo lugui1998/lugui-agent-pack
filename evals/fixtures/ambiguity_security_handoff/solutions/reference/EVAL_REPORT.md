@@ -1,0 +1,1 @@
+The security specialist reviewed the failed prefix checks and all seven deployment constraints. The decision covers filesystem resolution, missing leaves, symlink boundaries, decoding ownership, and the seven acceptance checks without editing the protected source.

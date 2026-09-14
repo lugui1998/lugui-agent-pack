@@ -1,0 +1,11 @@
+{
+  "fixture_label": "SYNTHETIC FROZEN EVIDENCE — NOT A REAL SOURCE",
+  "question": "clinical_effect",
+  "url": "https://north-audit.example.invalid/frozen/2025-04",
+  "published": "2025-04-20",
+  "design": "later operational audit",
+  "headline_population": "all enrolled adults after expansion to a higher-risk cohort",
+  "headline_effect_percentage_points": 1.1,
+  "comparable_risk_north_effect_percentage_points": -3.8,
+  "auditor_interpretation": "the sign reversal in the headline is explained by population mix; the comparable-risk estimate remains favorable"
+}

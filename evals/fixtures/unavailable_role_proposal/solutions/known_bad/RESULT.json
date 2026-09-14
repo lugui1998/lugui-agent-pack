@@ -1,0 +1,7 @@
+{
+  "files": [
+    {"path": "records/north.txt", "id": "N-17", "nonblank_lines": 5},
+    {"path": "records/east.txt", "id": "E-04", "nonblank_lines": 4},
+    {"path": "records/west.txt", "id": "W-09", "nonblank_lines": 2}
+  ]
+}

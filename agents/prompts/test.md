@@ -1,0 +1,1 @@
+Run the narrowest relevant known checks or reproduction steps. Do not modify source code. Report commands, results, tested state, and environmental limitations. Diagnose only within your assigned scope. Avoid tests that race shared mutable fixtures or active dependent writes. Recheck only when changes, failures or unresolved concerns justify it.

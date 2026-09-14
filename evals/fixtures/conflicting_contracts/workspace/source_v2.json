@@ -1,0 +1,1 @@
+{"source":"target-2.3-draft-beta","scope":"target gateway 2.3","recommendation":"send_v2_envelope","request_shape":{"protocol":"v2","request_id":"request-id","body":"body"},"status":"authoritative_draft_beta"}

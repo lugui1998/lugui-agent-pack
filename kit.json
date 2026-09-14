@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "name": "lugui-agent-pack",
+  "version": "1.0.0",
+  "repository": "https://github.com/lugui1998/lugui-agent-pack.git",
+  "instructions": {
+    "source": "AGENTS.md",
+    "marker": "lugui-agent-pack"
+  },
+  "agents": {
+    "source": ".codex/agents"
+  },
+  "projectConfig": ".codex/config.toml",
+  "skill": {
+    "name": "stop-slop",
+    "source": ".agents/skills/stop-slop",
+    "upstream": "https://github.com/hardikpandya/stop-slop.git"
+  },
+  "agentCatalog": "agents/catalog.json",
+  "generator": "scripts/agents.py",
+  "runtimePolicy": "AGENTS.md",
+  "python": {
+    "minimum": "3.10",
+    "tomlParser": "stdlib tomllib on 3.11+, tomli on 3.10"
+  },
+  "validation": {
+    "tests": "python -m unittest discover -s tests",
+    "generation": "python scripts/agents.py --check",
+    "evaluation": "evals/README.md",
+    "status": "released; see validation/README.md"
+  },
+  "compatibility": {
+    "targetCodex": "0.154.0-alpha.6.2",
+    "verifiedAt": "2026-09-12",
+    "effectiveRuntimeVerification": "pending"
+  }
+}

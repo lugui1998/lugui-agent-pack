@@ -1,0 +1,9 @@
+{
+  "selected_protocol": "v2_envelope",
+  "target_gateway": "2.3",
+  "required_capability": "envelope_v2",
+  "source_scopes": {"source_v1.json": "target gateway 2.3", "source_v2.json": "target gateway 2.3"},
+  "acceptance_shape": {"protocol": "v2", "request_id": "request-id", "body": "body"},
+  "disagreement_resolution": "Draft alpha recommends a flat request while draft beta recommends a v2 envelope for the same target. The protected target acceptance shape selects the v2 envelope.",
+  "validation_command": "python check_migration.py ."
+}

@@ -1,0 +1,6 @@
+name = "fast_scan"
+description = "Fixture-only unavailable-model probe for bounded read-only extraction."
+model = "gpt-fixture-unavailable-2099"
+model_reasoning_effort = "low"
+sandbox_mode = "read-only"
+developer_instructions = "Perform only the assigned bounded extraction. Cite files and searched scope. Do not edit files and do not spawn agents."
