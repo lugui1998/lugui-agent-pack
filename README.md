@@ -1,6 +1,10 @@
-# Lugui Codex Agent Kit
+# Lugui Agent Pack
 
-Luna handles routine work and coordinates bounded specialists. Spark and Luna perform extraction and straightforward execution; Terra, Sol and Astra handle assignments that require more judgment. Independent work runs in parallel once its dependencies and shared resources permit it.
+Lugui Agent Pack helps Codex finish tasks with fewer tokens and shorter end-to-end runtimes. Luna handles simple work directly, then chooses the smallest model likely to complete a harder assignment well. Spark and Luna cover lookup and routine execution; Terra, Sol, and Astra handle work that needs more judgment or deeper reasoning.
+
+The pack routes work by the capability each task requires instead of sending every task to a large model. That keeps expensive context and stronger models for the assignments that need them, while smaller adequate models handle the rest. The goal is lower token use, faster completion, and preserved correctness.
+
+The pack also coordinates independent work in parallel, waits for real dependencies, and validates results in proportion to their risk.
 
 This kit contains instruction-driven routing and scheduling policies. It does not enforce a dependency graph or guarantee that a model will select the right role. The evaluation suite supplies fixtures and records available evidence; bounded behavioral and comparative evidence is linked from the completed checklist, with failures and limits retained.
 
