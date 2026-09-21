@@ -8,6 +8,8 @@ For this project, first decide whether delegation or stronger capability is just
 
 For example, extracting 200 declarations can be routine, while a five-line concurrency bug can require expert reasoning. A fully specified analysis may stay local; unresolved consequential uncertainty warrants a capable specialist.
 
+When the user explicitly asks to plan, brainstorm with the AI, suggest ideas, explore possibilities, understand a concept and develop ideas around it, or otherwise requests collaborative ideation, spawn and use the `brainstorm` agent before producing the substantive response. Treat these requests as ideation even when they are not framed as a software task. The Brainstorm agent is read-only and uses the available Astra model (`gpt-6-astra`);  Do not substitute the ordinary `planner` for this explicit ideation trigger. If Brainstorm is unavailable, use its configured fallback and report the capability limitation to the main agent.
+
 | Assignment | Role |
 |---|---|
 | Bounded extraction, file/symbol lookup | `fast_scan` (Spark) or `explorer` (Luna) |
@@ -22,6 +24,7 @@ For example, extracting 200 declarations can be routine, while a five-line concu
 | Security-sensitive trust-boundary analysis | `security_reviewer` (Sol) |
 | Ambiguous causal investigation | `deep_explorer` (Sol) |
 | Uncertain decomposition or shared design | `planner` (Sol) |
+| Explicit planning, brainstorming, suggestions, concept exploration or collaborative ideation | `brainstorm` (Astra) |
 | Hardest planning, diagnosis, review or disagreement | `expert` (Astra) |
 | Focused documentation/source lookup | `docs_researcher` (Luna) or `web_searcher` (Spark) |
 | Substantial isolated research coordination | `web_coordinator` (Luna) |
