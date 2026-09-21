@@ -12,7 +12,7 @@ When the user explicitly asks to plan, brainstorm with the AI, suggest ideas, ex
 
 | Assignment | Role |
 |---|---|
-| Bounded extraction, file/symbol lookup | `fast_scan` (Spark) or `explorer` (Luna) |
+| Bounded extraction, file/symbol lookup | `fast_scan` (Luna, none) or `explorer` (Luna) |
 | Straightforward edits with understood behavior | `worker` (Luna) |
 | Bounded implementation requiring interpretation | `standard_worker` (Terra) |
 | Complex coding and interacting behavior | `complex_worker` (Sol) |
@@ -26,7 +26,7 @@ When the user explicitly asks to plan, brainstorm with the AI, suggest ideas, ex
 | Uncertain decomposition or shared design | `planner` (Sol) |
 | Explicit planning, brainstorming, suggestions, concept exploration or collaborative ideation | `brainstorm` (Astra) |
 | Hardest planning, diagnosis, review or disagreement | `expert` (Astra) |
-| Focused documentation/source lookup | `docs_researcher` (Luna) or `web_searcher` (Spark) |
+| Focused documentation/source lookup | `docs_researcher` (Luna) or `web_searcher` (Luna, none) |
 | Substantial isolated research coordination | `web_coordinator` (Luna) |
 | Disputed or consequential claim verification | `web_verifier` (Sol) |
 
@@ -43,7 +43,7 @@ On the validated CLI, full-history forks inherit the parent agent type and rejec
 - Before reporting a required tool or role unavailable, use supported tool discovery or make a bounded named-role attempt. Report the actual discovery result or runtime error. Absence from the initially visible tools and an unattempted assignment do not establish unavailability.
 - Search tool names for the specific action before broad description searches. Return bounded matching names and descriptions; avoid dumping the whole tool catalog into context.
 - Resolve specialist disagreement through decisive evidence or an appropriately capable specialist. Preserve caveats in the final answer.
-- If Spark is unavailable, use `explorer` for extraction or `docs_researcher` for research. Other availability alternatives: `worker` -> `standard_worker` -> `complex_worker` -> `expert_worker`; `reviewer` -> `deep_reviewer` -> `expert`; `planner`, `deep_explorer`, `security_reviewer`, `web_verifier` -> `expert`; `test_runner` -> `test_diagnostician`. These are availability alternatives, not a mandatory reasoning ladder. Check that scope, tools and capability still fit. Report unavailable required expertise instead of silently substituting a weaker model.
+- If the bounded Luna roles are unavailable, use `explorer` for extraction or `docs_researcher` for research. Other availability alternatives: `worker` -> `standard_worker` -> `complex_worker` -> `expert_worker`; `reviewer` -> `deep_reviewer` -> `expert`; `planner`, `deep_explorer`, `security_reviewer`, `web_verifier` -> `expert`; `test_runner` -> `test_diagnostician`. These are availability alternatives, not a mandatory reasoning ladder. Check that scope, tools and capability still fit. Report unavailable required expertise instead of silently substituting a weaker model.
 
 ## Start ready work in parallel
 

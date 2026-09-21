@@ -123,7 +123,7 @@ class TelemetryTests(unittest.TestCase):
     def test_real_shaped_six_node_rollout_totals_373209_without_private_text(self):
         totals = [163426, 43580, 40031, 39810, 39993, 46369]
         roles = ["ROOT", "fast_scan", "worker", "standard_worker", "complex_worker", "expert"]
-        models = ["gpt-5.6-luna", "gpt-5.3-codex-spark", "gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol", "gpt-6-astra"]
+        models = ["gpt-5.6-luna", "gpt-5.6-luna", "gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol", "gpt-6-astra"]
         with tempfile.TemporaryDirectory() as temp:
             home = Path(temp) / ".codex"
             write_rollout(home, ROOT, thread_records(ROOT, children=CHILDREN, total=totals[0]))

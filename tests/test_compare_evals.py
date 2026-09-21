@@ -68,12 +68,10 @@ class CompareTests(unittest.TestCase):
         self.assertEqual("UNKNOWN", model["standard_reference_credits"])
         self.assertFalse(model["complete_component_coverage"])
 
-    def test_invalid_counts_and_spark_credit_are_unknown(self):
+    def test_invalid_counts_remain_unknown(self):
         invalid = telemetry(input_tokens=True, cached=0, output=2, complete_total="UNKNOWN",
                             observed_total="UNKNOWN", collector_status="PARTIAL")
         self.assertEqual("UNKNOWN", compare.token_breakdown(invalid)["by_model"]["gpt-5.6-luna"]["standard_reference_credits"])
-        spark = telemetry(model="gpt-5.3-codex-spark")
-        self.assertIn("Spark", compare.token_breakdown(spark)["by_model"]["gpt-5.3-codex-spark"]["standard_reference_credits"])
         too_cached = telemetry(input_tokens=2, cached=3, output=1, complete_total="UNKNOWN",
                                observed_total="UNKNOWN", collector_status="PARTIAL")
         self.assertEqual("UNKNOWN", compare.token_breakdown(too_cached)["by_model"]["gpt-5.6-luna"]["standard_reference_credits"])

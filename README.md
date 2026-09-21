@@ -1,6 +1,6 @@
 # Lugui Agent Pack
 
-Lugui Agent Pack helps Codex finish tasks with fewer tokens and shorter end-to-end runtimes. Luna handles simple work directly, then chooses the smallest model likely to complete a harder assignment well. Spark and Luna cover lookup and routine execution; Terra, Sol, and Astra handle work that needs more judgment or deeper reasoning.
+Lugui Agent Pack helps Codex finish tasks with fewer tokens and shorter end-to-end runtimes. Luna handles simple work directly, then chooses the smallest model likely to complete a harder assignment well. Luna covers lookup and routine execution; Terra, Sol, and Astra handle work that needs more judgment or deeper reasoning.
 
 The pack routes work by the capability each task requires instead of sending every task to a large model. That keeps expensive context and stronger models for the assignments that need them, while smaller adequate models handle the rest. The goal is lower token use, faster completion, and preserved correctness.
 

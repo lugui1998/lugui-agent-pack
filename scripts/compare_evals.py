@@ -121,8 +121,6 @@ def token_breakdown(telemetry: Any) -> dict[str, Any]:
         rate = RATES.get(model)
         if not bucket["complete_component_coverage"]:
             bucket["standard_reference_credits"] = "UNKNOWN"
-        elif model.endswith("spark") or "spark" in model:
-            bucket["standard_reference_credits"] = "UNKNOWN: Spark uses a separate quota with no numeric rate"
         elif rate is None:
             bucket["standard_reference_credits"] = "UNKNOWN"
         else:
