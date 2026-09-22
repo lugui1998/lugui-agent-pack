@@ -10,7 +10,7 @@ This kit contains instruction-driven routing and scheduling policies. It does no
 
 ## Current status
 
-Version 1.0.0 is the first Luna-led release. The main default is Luna Medium; unnamed helpers use Luna Low. Role files pin both model and effort. The bounded Windows validation is complete; these defaults remain provisional rather than universally optimal. See [validation/README.md](validation/README.md) for evidence and open limits.
+Version 1.2.0 updates Luna and Sol roles to GPT-6. The main default is Luna Medium; unnamed helpers use Luna Low. Role files pin both model and effort. The bounded Windows validation is complete; these defaults remain provisional rather than universally optimal. See [validation/README.md](validation/README.md) for evidence and open limits.
 
 ## Contents
 

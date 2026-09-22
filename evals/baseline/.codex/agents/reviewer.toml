@@ -1,6 +1,6 @@
 name = "reviewer"
 description = "Sol read-only reviewer for correctness, regressions, and edge cases."
-model = "gpt-5.6-sol"
+model = "gpt-6-sol"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "name": "lugui-agent-pack",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "repository": "https://github.com/lugui1998/lugui-agent-pack.git",
   "instructions": {
     "source": "AGENTS.md",

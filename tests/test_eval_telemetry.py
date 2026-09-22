@@ -59,7 +59,7 @@ def thread_records(
     local_turn=None,
     parent=None,
     role=None,
-    model="gpt-5.6-luna",
+    model="gpt-6-luna",
     effort="medium",
     children=(),
     total=10,
@@ -123,7 +123,7 @@ class TelemetryTests(unittest.TestCase):
     def test_real_shaped_six_node_rollout_totals_373209_without_private_text(self):
         totals = [163426, 43580, 40031, 39810, 39993, 46369]
         roles = ["ROOT", "fast_scan", "worker", "standard_worker", "complex_worker", "expert"]
-        models = ["gpt-5.6-luna", "gpt-5.6-luna", "gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol", "gpt-6-astra"]
+        models = ["gpt-6-luna", "gpt-6-luna", "gpt-6-luna", "gpt-5.6-terra", "gpt-6-sol", "gpt-6-astra"]
         with tempfile.TemporaryDirectory() as temp:
             home = Path(temp) / ".codex"
             write_rollout(home, ROOT, thread_records(ROOT, children=CHILDREN, total=totals[0]))
@@ -309,11 +309,11 @@ class TelemetryTests(unittest.TestCase):
             write_rollout(home, ROOT, thread_records(ROOT, children=(CHILDREN[0],), total=10))
             first = thread_records(
                 CHILDREN[0], local_turn="child-first", parent=ROOT, role="worker",
-                model="gpt-5.6-luna", effort="medium", total=20,
+                model="gpt-6-luna", effort="medium", total=20,
             )
             second = thread_records(
                 CHILDREN[0], local_turn="child-followup", parent=ROOT, role="worker",
-                model="gpt-5.6-sol", effort="high", total=30,
+                model="gpt-6-sol", effort="high", total=30,
             )
             unrelated = thread_records(
                 CHILDREN[0], root_turn="later-root", local_turn="child-later",
@@ -332,8 +332,8 @@ class TelemetryTests(unittest.TestCase):
         self.assertEqual("UNKNOWN", child["model"])
         self.assertEqual("UNKNOWN", child["effort"])
         contexts = {turn["local_turn_id"]: (turn["model"], turn["effort"]) for turn in child["turns"]}
-        self.assertEqual(("gpt-5.6-luna", "medium"), contexts["child-first"])
-        self.assertEqual(("gpt-5.6-sol", "high"), contexts["child-followup"])
+        self.assertEqual(("gpt-6-luna", "medium"), contexts["child-first"])
+        self.assertEqual(("gpt-6-sol", "high"), contexts["child-followup"])
         self.assertNotIn("child-later", json.dumps(child))
 
     def test_turn_cumulative_usage_detects_missing_response_but_absence_is_unknown(self):

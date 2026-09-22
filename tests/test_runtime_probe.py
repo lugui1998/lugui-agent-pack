@@ -48,7 +48,7 @@ class RuntimeProbeTests(unittest.TestCase):
     def config_response(self):
         return {
             "config": {
-                "model": "gpt-5.6-luna",
+                "model": "gpt-6-luna",
                 "model_reasoning_effort": "medium",
                 "sandbox_mode": "workspace-write",
                 "approval_policy": "on-request",
@@ -57,7 +57,7 @@ class RuntimeProbeTests(unittest.TestCase):
                     "enabled": True,
                     "max_concurrent_threads_per_session": 16,
                     "max_depth": 2,
-                    "default_subagent_model": "gpt-5.6-luna",
+                    "default_subagent_model": "gpt-6-luna",
                     "default_subagent_reasoning_effort": "low",
                     "private": "must-not-appear",
                 },
@@ -80,7 +80,7 @@ class RuntimeProbeTests(unittest.TestCase):
     def test_selected_configuration_allowlists_fields_and_provenance(self):
         selected = runtime_probe.selected_configuration(self.config_response())
         serialized = json.dumps(selected)
-        self.assertEqual("gpt-5.6-luna", selected["effective"]["model"])
+        self.assertEqual("gpt-6-luna", selected["effective"]["model"])
         self.assertEqual("project", selected["origins"]["model"]["type"])
         self.assertEqual("v1", selected["origins"]["model"]["version"])
         self.assertEqual("project", selected["origins"]["agents"]["max_depth"]["type"])
@@ -115,12 +115,12 @@ class RuntimeProbeTests(unittest.TestCase):
             roles = root / ".codex" / "agents"
             roles.mkdir(parents=True)
             (roles / "worker.toml").write_text(
-                'name="worker"\nmodel="gpt-5.6-luna"\nmodel_reasoning_effort="medium"\n'
+                'name="worker"\nmodel="gpt-6-luna"\nmodel_reasoning_effort="medium"\n'
                 'developer_instructions="private text"\n', encoding="utf-8"
             )
             found = runtime_probe.configured_roles(root, root / "home")
         self.assertEqual("worker", found[0]["role"])
-        self.assertEqual("gpt-5.6-luna", found[0]["model"])
+        self.assertEqual("gpt-6-luna", found[0]["model"])
         self.assertNotIn("private text", json.dumps(found))
 
     def test_materialize_fixture_copies_only_candidate_runtime_files(self):
@@ -130,8 +130,8 @@ class RuntimeProbeTests(unittest.TestCase):
             destination = root / "fixture"
             (source / ".codex" / "agents").mkdir(parents=True)
             (source / "AGENTS.md").write_text("instructions\n", encoding="utf-8")
-            (source / ".codex" / "config.toml").write_text('model="gpt-5.6-luna"\n', encoding="utf-8")
-            (source / ".codex" / "agents" / "worker.toml").write_text('model="gpt-5.6-luna"\n', encoding="utf-8")
+            (source / ".codex" / "config.toml").write_text('model="gpt-6-luna"\n', encoding="utf-8")
+            (source / ".codex" / "agents" / "worker.toml").write_text('model="gpt-6-luna"\n', encoding="utf-8")
             (source / ".codex" / "auth.json").write_text("secret", encoding="utf-8")
             copied = runtime_probe.materialize_fixture(source, destination)
             self.assertEqual(["AGENTS.md", ".codex/config.toml", ".codex/agents/worker.toml"], copied)
@@ -144,13 +144,13 @@ class RuntimeProbeTests(unittest.TestCase):
             fixture = root / "fixture"
             (source / ".codex").mkdir(parents=True)
             (source / ".codex" / "config.toml").write_text(
-                'model="gpt-5.6-luna"\nmodel_reasoning_effort="medium"\n'
-                '[agents]\nenabled=true\ndefault_subagent_model="gpt-5.6-luna"\n'
+                'model="gpt-6-luna"\nmodel_reasoning_effort="medium"\n'
+                '[agents]\nenabled=true\ndefault_subagent_model="gpt-6-luna"\n'
                 'default_subagent_reasoning_effort="low"\n', encoding="utf-8"
             )
             config = runtime_probe.minimal_isolated_home_config(source, fixture)
         parsed = runtime_probe.tomllib.loads(config)
-        self.assertEqual("gpt-5.6-luna", parsed["model"])
+        self.assertEqual("gpt-6-luna", parsed["model"])
         self.assertEqual("low", parsed["agents"]["default_subagent_reasoning_effort"])
         self.assertEqual("trusted", next(iter(parsed["projects"].values()))["trust_level"])
         self.assertNotIn("auth", config.lower())
@@ -166,7 +166,7 @@ class RuntimeProbeTests(unittest.TestCase):
             {
                 "id": 3,
                 "result": {
-                    "model": "gpt-5.6-luna",
+                    "model": "gpt-6-luna",
                     "reasoningEffort": "medium",
                     "modelProvider": "openai",
                     "cwd": "C:/work",
@@ -193,7 +193,7 @@ class RuntimeProbeTests(unittest.TestCase):
         self.assertEqual([str(Path(temp).resolve())], thread_request["params"]["runtimeWorkspaceRoots"])
         self.assertEqual(False, thread_request["params"]["config"]["mcp_servers"]["example"]["enabled"])
         self.assertFalse(report["isolation"]["model_turn_started"])
-        self.assertEqual("gpt-5.6-luna", report["thread"]["model"])
+        self.assertEqual("gpt-6-luna", report["thread"]["model"])
         self.assertTrue(report["transport"]["client_process_stopped"])
         self.assertTrue(report["isolation"]["runtime_workspace_root_requested"])
         self.assertIn("process-local", report["isolation"]["project_trust"])

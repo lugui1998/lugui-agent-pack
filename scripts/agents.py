@@ -14,7 +14,7 @@ except ModuleNotFoundError:
 
 ROOT = Path(__file__).resolve().parents[1]
 EFFORTS = {"none", "low", "medium", "high", "xhigh", "max"}
-MODELS = {"gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol", "gpt-6-astra"}
+MODELS = {"gpt-6-luna", "gpt-5.6-terra", "gpt-6-sol", "gpt-6-astra"}
 
 
 def load_catalog(root=ROOT):

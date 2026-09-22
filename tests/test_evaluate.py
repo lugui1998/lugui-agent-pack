@@ -191,7 +191,7 @@ class EvaluateTests(unittest.TestCase):
             workspace = Path(temp)
             role = workspace / ".codex" / "agents" / "web_coordinator.toml"
             role.parent.mkdir(parents=True)
-            role.write_text('model = "gpt-5.6-luna"\nmodel_reasoning_effort = "medium"\n', encoding="utf-8")
+            role.write_text('model = "gpt-6-luna"\nmodel_reasoning_effort = "medium"\n', encoding="utf-8")
             evaluate.apply_role_overrides(workspace, {"web_coordinator": {"model_reasoning_effort": "max"}})
             self.assertIn('model_reasoning_effort = "max"', role.read_text(encoding="utf-8"))
 
@@ -226,13 +226,13 @@ class EvaluateTests(unittest.TestCase):
             rollout = root / ".codex" / "sessions" / "2026" / "01" / f"rollout-x-{thread_id}.jsonl"
             rollout.parent.mkdir(parents=True)
             rollout.write_text("\n".join(json.dumps(item) for item in [
-                {"type": "turn_context", "payload": {"model": "gpt-5.6-luna", "effort": "low", "private": "secret"}},
+                {"type": "turn_context", "payload": {"model": "gpt-6-luna", "effort": "low", "private": "secret"}},
                 {"type": "response_item", "payload": {"type": "message", "role": "developer", "content": [{"type": "input_text", "text": "Project rule: retain evidence. private=secret"}]}},
             ]) + "\n", encoding="utf-8")
             evidence = evaluate.session_activation_evidence(events, workspace, root / ".codex", True)
         record = evidence["records"][0]
         self.assertEqual("FOUND", record["status"])
-        self.assertEqual("gpt-5.6-luna", record["turn_context_model"])
+        self.assertEqual("gpt-6-luna", record["turn_context_model"])
         self.assertEqual("low", record["turn_context_effort"])
         self.assertTrue(record["copied_agents_complete_presence"])
         self.assertNotIn("secret", json.dumps(evidence))
@@ -274,7 +274,7 @@ class EvaluateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             workspace = Path(temp)
             (workspace / ".codex").mkdir()
-            (workspace / ".codex" / "config.toml").write_text('model = "gpt-5.6-luna"\nmodel_reasoning_effort = "medium"\n', encoding="utf-8")
+            (workspace / ".codex" / "config.toml").write_text('model = "gpt-6-luna"\nmodel_reasoning_effort = "medium"\n', encoding="utf-8")
             evidence = {"status": "COMPLETE", "records": [{"status": "FOUND", "thread_id": "root", "turn_context_model": "gpt-6-astra",
                         "turn_context_effort": "UNKNOWN", "copied_agents_complete_presence": True}]}
             expected = evaluate.expected_configuration(workspace, {})
@@ -287,14 +287,14 @@ class EvaluateTests(unittest.TestCase):
         self.assertEqual("UNKNOWN", unknown["valid"])
 
     def test_configuration_validity_selects_primary_not_child(self):
-        expected = {"expected_main_model": "gpt-5.6-luna", "expected_main_reasoning_effort": "medium"}
+        expected = {"expected_main_model": "gpt-6-luna", "expected_main_reasoning_effort": "medium"}
         evidence = {"status": "COMPLETE", "records": [
-            {"status": "FOUND", "thread_id": "root", "turn_context_model": "gpt-5.6-luna", "turn_context_effort": "medium", "copied_agents_complete_presence": True},
+            {"status": "FOUND", "thread_id": "root", "turn_context_model": "gpt-6-luna", "turn_context_effort": "medium", "copied_agents_complete_presence": True},
             {"status": "FOUND", "thread_id": "child", "turn_context_model": "gpt-6-astra", "turn_context_effort": "high", "copied_agents_complete_presence": True},
         ]}
         validity = evaluate.configuration_validity(expected, evidence, "root")
         self.assertTrue(validity["valid"])
-        self.assertEqual("gpt-5.6-luna", validity["actual_main_model"])
+        self.assertEqual("gpt-6-luna", validity["actual_main_model"])
 
     def test_scenario_workspace_excludes_oracle_and_external_oracle_rejects_bad_artifact(self):
         scenario, fixture = evaluate.load_scenario("parallel_modules")

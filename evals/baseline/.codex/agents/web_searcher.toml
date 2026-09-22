@@ -1,6 +1,6 @@
 name = "web_searcher"
 description = "Fast, narrow, read-only web-search worker for one assigned research angle."
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 model_reasoning_effort = "none"
 sandbox_mode = "read-only"
 

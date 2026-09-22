@@ -8,14 +8,14 @@ source = "."
 
 [variants.current-low]
 source = "."
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 effort = "low"
 
 [variants.coordinator-max]
 source = "."
 
 [variants.coordinator-max.role_overrides.web_coordinator]
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 model_reasoning_effort = "max"
 
 [variants.single-strong]

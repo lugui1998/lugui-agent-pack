@@ -276,7 +276,7 @@ class InstallerTests(unittest.TestCase):
             updated = config.read_text(encoding="utf-8")
             self.assertLess(updated.index("model ="), updated.index("[mcp_servers.demo]"))
             parsed = tomllib.loads(updated)
-            self.assertEqual(parsed["model"], "gpt-5.6-luna")
+            self.assertEqual(parsed["model"], "gpt-6-luna")
             self.assertEqual(parsed["mcp_servers"]["demo"]["command"], "demo")
 
     def test_merge_preserves_user_values_comments_and_unrelated_tables(self):
@@ -300,7 +300,7 @@ class InstallerTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             parsed = tomllib.loads(config.read_text(encoding="utf-8"))
             self.assertFalse(parsed["agents"]["enabled"])
-            self.assertEqual(parsed["agents"]["default_subagent_model"], "gpt-5.6-luna")
+            self.assertEqual(parsed["agents"]["default_subagent_model"], "gpt-6-luna")
 
     def test_inline_agent_table_conflict_blocks_other_writes(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -325,7 +325,7 @@ class InstallerTests(unittest.TestCase):
             target_text = target.read_text(encoding="utf-8")
             target.write_text(target_text.replace("[agents]", "unrelated = 9\n\n[agents]"), encoding="utf-8")
             source = kit / ".codex" / "config.toml"
-            source.write_text(source.read_text(encoding="utf-8").replace('model = "gpt-5.6-luna"', 'model = "next-luna"'), encoding="utf-8")
+            source.write_text(source.read_text(encoding="utf-8").replace('model = "gpt-6-luna"', 'model = "next-luna"'), encoding="utf-8")
             second = self.invoke(installer, project, home, "--instructions", "skip", "--update", "--apply")
             self.assertEqual(second.returncode, 0, second.stderr)
             parsed = tomllib.loads(target.read_text(encoding="utf-8"))
@@ -341,7 +341,7 @@ class InstallerTests(unittest.TestCase):
             first = self.invoke(installer, project, home, "--instructions", "skip", "--apply")
             self.assertEqual(first.returncode, 0, first.stderr)
             config = project / ".codex" / "config.toml"
-            config.write_text(config.read_text(encoding="utf-8").replace('model = "gpt-5.6-luna"', 'model = "mine"'), encoding="utf-8")
+            config.write_text(config.read_text(encoding="utf-8").replace('model = "gpt-6-luna"', 'model = "mine"'), encoding="utf-8")
             source_agent = kit / ".codex" / "agents" / "worker.toml"
             target_agent = project / ".codex" / "agents" / "worker.toml"; target_before = target_agent.read_bytes()
             source_agent.write_text(source_agent.read_text(encoding="utf-8") + "\n# next kit\n", encoding="utf-8")

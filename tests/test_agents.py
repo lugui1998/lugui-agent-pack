@@ -20,8 +20,8 @@ class AgentCatalogTests(unittest.TestCase):
         for path, text in agents.render().items():
             data = agents.tomllib.loads(text)
             if "/agents/" not in path:
-                self.assertEqual(data["model"], "gpt-5.6-luna")
-                self.assertEqual(data["agents"]["default_subagent_model"], "gpt-5.6-luna")
+                self.assertEqual(data["model"], "gpt-6-luna")
+                self.assertEqual(data["agents"]["default_subagent_model"], "gpt-6-luna")
                 self.assertEqual(data["agents"]["max_depth"], 2)
                 continue
             self.assertIn(data["model_reasoning_effort"], agents.EFFORTS)

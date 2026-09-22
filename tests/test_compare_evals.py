@@ -12,7 +12,7 @@ assert SPEC and SPEC.loader
 SPEC.loader.exec_module(compare)
 
 
-def telemetry(*, model="gpt-5.6-luna", input_tokens=100, cached=40, output=10,
+def telemetry(*, model="gpt-6-luna", input_tokens=100, cached=40, output=10,
               collector_status="COMPLETE", thread_status="COMPLETED", usage_status="COMPLETE",
               complete_total=110, observed_total=110):
     return {
@@ -54,7 +54,7 @@ def attempt(number, elapsed, accepted=True, valid=True, prehash="same", copied="
 
 class CompareTests(unittest.TestCase):
     def test_credit_estimate_uses_complete_collector_coverage(self):
-        result = compare.token_breakdown(telemetry())["by_model"]["gpt-5.6-luna"]
+        result = compare.token_breakdown(telemetry())["by_model"]["gpt-6-luna"]
         self.assertEqual((60 * 5 + 40 * .5 + 10 * 30) / 1_000_000,
                          result["standard_reference_credits"])
 
@@ -62,7 +62,7 @@ class CompareTests(unittest.TestCase):
         data = telemetry(collector_status="PARTIAL", thread_status="INCOMPLETE",
                          usage_status="INCOMPLETE", complete_total="UNKNOWN", observed_total=110)
         result = compare.token_breakdown(data)
-        model = result["by_model"]["gpt-5.6-luna"]
+        model = result["by_model"]["gpt-6-luna"]
         self.assertEqual("UNKNOWN", result["full_total"])
         self.assertEqual(110, result["observed_subtotal"])
         self.assertEqual("UNKNOWN", model["standard_reference_credits"])
@@ -71,13 +71,13 @@ class CompareTests(unittest.TestCase):
     def test_invalid_counts_remain_unknown(self):
         invalid = telemetry(input_tokens=True, cached=0, output=2, complete_total="UNKNOWN",
                             observed_total="UNKNOWN", collector_status="PARTIAL")
-        self.assertEqual("UNKNOWN", compare.token_breakdown(invalid)["by_model"]["gpt-5.6-luna"]["standard_reference_credits"])
+        self.assertEqual("UNKNOWN", compare.token_breakdown(invalid)["by_model"]["gpt-6-luna"]["standard_reference_credits"])
         too_cached = telemetry(input_tokens=2, cached=3, output=1, complete_total="UNKNOWN",
                                observed_total="UNKNOWN", collector_status="PARTIAL")
-        self.assertEqual("UNKNOWN", compare.token_breakdown(too_cached)["by_model"]["gpt-5.6-luna"]["standard_reference_credits"])
+        self.assertEqual("UNKNOWN", compare.token_breakdown(too_cached)["by_model"]["gpt-6-luna"]["standard_reference_credits"])
         missing_cached = telemetry()
         del missing_cached["threads"][0]["usage"]["components"]["cached_input_tokens"]
-        self.assertEqual("UNKNOWN", compare.token_breakdown(missing_cached)["by_model"]["gpt-5.6-luna"]["standard_reference_credits"])
+        self.assertEqual("UNKNOWN", compare.token_breakdown(missing_cached)["by_model"]["gpt-6-luna"]["standard_reference_credits"])
 
     def test_summarize_keeps_retries_in_end_to_end_and_reports_failed_valid_runs(self):
         document = {"case": "x", "variant": "current", "attempts": [

@@ -1,6 +1,6 @@
 name = "web_coordinator"
 description = "Coordinates bounded parallel web research and produces a sourced synthesis."
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 model_reasoning_effort = "max"
 sandbox_mode = "read-only"
 

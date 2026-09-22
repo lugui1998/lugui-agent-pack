@@ -1,6 +1,6 @@
 name = "security_reviewer"
 description = "Deep Sol security reviewer for trust boundaries and exploitable behavior."
-model = "gpt-5.6-sol"
+model = "gpt-6-sol"
 model_reasoning_effort = "max"
 sandbox_mode = "read-only"
 

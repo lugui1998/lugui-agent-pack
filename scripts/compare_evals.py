@@ -10,9 +10,9 @@ from pathlib import Path
 from typing import Any
 
 RATES = {
-    "gpt-5.6-luna": {"input": 5, "cached": 0.5, "output": 30},
+    "gpt-6-luna": {"input": 5, "cached": 0.5, "output": 30},
     "gpt-5.6-terra": {"input": 50, "cached": 5, "output": 300},
-    "gpt-5.6-sol": {"input": 100, "cached": 10, "output": 500},
+    "gpt-6-sol": {"input": 100, "cached": 10, "output": 500},
     "gpt-6-astra": {"input": 250, "cached": 25, "output": 1250},
 }
 RATE_NOTE = {"kind": "STANDARD reference credits, not actual account usage, USD, or cost",
