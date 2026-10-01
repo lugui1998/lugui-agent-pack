@@ -1,6 +1,6 @@
 # Lugui Agent Pack
 
-Lugui Agent Pack helps Codex finish tasks with fewer tokens and shorter end-to-end runtimes. Luna handles simple work directly, then chooses the smallest model likely to complete a harder assignment well. Luna covers lookup and routine execution; Terra, Sol, and Astra handle work that needs more judgment or deeper reasoning.
+Lugui Agent Pack helps Codex finish tasks with fewer tokens and shorter end-to-end runtimes. Luna handles simple work directly, then chooses the smallest model likely to complete a harder assignment well. Luna covers lookup and routine execution, GPT-6.1 Sol handles work needing deeper judgment, and Astra handles the hardest or unresolved consequential work.
 
 The pack routes work by the capability each task requires instead of sending every task to a large model. That keeps expensive context and stronger models for the assignments that need them, while smaller adequate models handle the rest. The goal is lower token use, faster completion, and preserved correctness.
 
@@ -10,7 +10,7 @@ This kit contains instruction-driven routing and scheduling policies. It does no
 
 ## Current status
 
-Version 1.2.0 updates Luna and Sol roles to GPT-6. The main default is Luna Medium; unnamed helpers use Luna Low. Role files pin both model and effort. The bounded Windows validation is complete; these defaults remain provisional rather than universally optimal. See [validation/README.md](validation/README.md) for evidence and open limits.
+Version 1.3.1 routes roles previously assigned to GPT-5.6 Terra or GPT-6 Sol to GPT-6.1 Sol, while reserving Astra for the hardest cases. The main default remains Luna Medium; unnamed helpers use Luna Low. Role files pin both model and effort. Existing bounded Windows validation covers the previous role model assignments; this routing update has not been live-validated. See [validation/README.md](validation/README.md) for evidence and open limits.
 
 ## Contents
 

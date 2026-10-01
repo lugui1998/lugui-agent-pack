@@ -1,6 +1,6 @@
 # Luna-led execution
 
-Use the fastest, least expensive model that can reliably meet the user's requirements. The kit's main-agent default is Luna; an explicit user/session model choice still wins. Preserve correctness while reducing completion time and total usage across the main agent and children.
+Use the fastest, least expensive model that can reliably meet the user's requirements. The kit's main-agent default is Luna; an explicit user/session model choice still wins. Use GPT-6.1 Sol for work needing more judgment than Terra but not Astra's top-end capability; reserve Astra for the hardest or still-unresolved consequential work. Preserve correctness while reducing completion time and total usage across the main agent and children.
 
 ## Route by required judgment
 
@@ -14,21 +14,21 @@ When the user explicitly asks to plan, brainstorm with the AI, suggest ideas, ex
 |---|---|
 | Bounded extraction, file/symbol lookup | `fast_scan` (Luna, none) or `explorer` (Luna) |
 | Straightforward edits with understood behavior | `worker` (Luna) |
-| Bounded implementation requiring interpretation | `standard_worker` (Terra) |
-| Complex coding and interacting behavior | `complex_worker` (Sol) |
+| Bounded implementation requiring interpretation | `standard_worker` (GPT-6.1 Sol) |
+| Complex coding and interacting behavior | `complex_worker` (GPT-6.1 Sol) |
 | Hardest implementation or unresolved consequential failure | `expert_worker` (Astra) |
 | Known checks and failure capture | `test_runner` (Luna) |
-| Reproduction or environment/failure diagnosis | `test_diagnostician` (Terra) |
+| Reproduction or environment/failure diagnosis | `test_diagnostician` (GPT-6.1 Sol) |
 | Routine review against explicit acceptance criteria | `reviewer` (Luna) |
-| Consequential or subtle correctness review | `deep_reviewer` (Sol) |
-| Security-sensitive trust-boundary analysis | `security_reviewer` (Sol) |
-| Ambiguous causal investigation | `deep_explorer` (Sol) |
-| Uncertain decomposition or shared design | `planner` (Sol) |
+| Consequential or subtle correctness review | `deep_reviewer` (GPT-6.1 Sol) |
+| Security-sensitive trust-boundary analysis | `security_reviewer` (GPT-6.1 Sol) |
+| Ambiguous causal investigation | `deep_explorer` (GPT-6.1 Sol) |
+| Uncertain decomposition or shared design | `planner` (GPT-6.1 Sol) |
 | Explicit planning, brainstorming, suggestions, concept exploration or collaborative ideation | `brainstorm` (Astra) |
 | Hardest planning, diagnosis, review or disagreement | `expert` (Astra) |
 | Focused documentation/source lookup | `docs_researcher` (Luna) or `web_searcher` (Luna, none) |
 | Substantial isolated research coordination | `web_coordinator` (Luna) |
-| Disputed or consequential claim verification | `web_verifier` (Sol) |
+| Disputed or consequential claim verification | `web_verifier` (GPT-6.1 Sol) |
 
 Custom role files pin their model and effort. Select the appropriate named role; do not assume a spawn override will replace a pinned setting. Keep the role's assigned scope and tool permissions intact.
 
