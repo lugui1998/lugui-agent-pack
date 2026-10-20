@@ -95,25 +95,35 @@ Python options unchanged.
 The default criteria, once explicitly enabled, are:
 
 - A banked reset expires within five days.
-- Either the five-hour or weekly core quota has 0% remaining when credits are available,
-  or at most 1% remaining without credits.
+- Either the five-hour or weekly core quota has 0% remaining with a sufficient
+  credit buffer, or at most 1% remaining without one.
+- The credit reserve is 200: a positive balance at or above that amount is a
+  sufficient buffer; a lower balance uses the threshold for no buffer.
+- Wait if the quotas at their usage thresholds will all reset naturally within two
+  days. A banked reset expiring strictly before that natural recovery can still be
+  used if the other criteria pass.
+- If credits are below the reserve and only the waiting rule prevents automatic
+  use, the agent asks whether to use or keep the proposed reset.
 - Usage queries begin with a 30-minute interval and adapt within a 5–60-minute range.
   Every redemption requires fresh account, quota and reset details.
 
 To preview enabling the feature with custom criteria:
 
 ```text
-python scripts/install.py --scope global --instructions append --automatic-resets enable --reset-expiry-days 3 --reset-remaining-with-credits 0 --reset-remaining-without-credits 1 --dry-run
+python scripts/install.py --scope global --instructions append --automatic-resets enable --reset-expiry-days 3 --reset-natural-wait-days 1 --reset-remaining-with-credits 0 --reset-remaining-without-credits 1 --dry-run
 ```
 
 Replace `--dry-run` with `--apply` only after reviewing the plan. Installation itself does
 not query the account or redeem a reset. Once an enabled hook is trusted and runs in Codex,
-it can redeem a reset automatically without asking again.
+it can redeem automatically when the saved criteria allow it. The choice described
+above applies when the waiting rule blocks automatic use.
 
 | Python option | PowerShell option | Default |
 | --- | --- | --- |
 | `--automatic-resets` | `-AutomaticResets` | `ask` |
 | `--reset-expiry-days` | `-ResetExpiryDays` | `5` |
+| `--reset-natural-wait-days` | `-ResetNaturalWaitDays` | `2` |
+| `--reset-credit-reserve` | `-ResetCreditReserve` | `200` |
 | `--reset-remaining-with-credits` | `-ResetRemainingWithCredits` | `0` |
 | `--reset-remaining-without-credits` | `-ResetRemainingWithoutCredits` | `1` |
 | `--reset-min-check-minutes` | `-ResetMinCheckMinutes` | `5` |
@@ -127,11 +137,31 @@ also retains saved preferences and reports an unresolved choice if none exists.
 their corresponding saved values. Explicit enable or custom reset options require global
 scope. Project installs do not read or change these global preferences.
 
+The natural-reset wait accepts fractional days from 0 through 365. Setting it to 0
+disables that waiting rule while retaining the other criteria. If both core quotas
+reach their usage thresholds, natural recovery is the later of their reset times.
+An older saved policy without this setting receives the two-day default.
+
+The credit reserve accepts finite, nonnegative numbers, including fractions.
+Setting it to 0 treats any positive balance as sufficient. A valid unlimited
+credit balance is sufficient regardless of the reserve. The reserve affects
+reset decisions; it does not impose a billing limit. Older policies receive the
+200-credit default while retaining their existing consent and custom criteria.
+
+Completed resets produce an agent notice with available status details. When a
+choice is needed, the agent records the user's explicit answer through a local
+helper; that helper makes no account request. The next hook event verifies the
+decision before any redemption. The hook also maintains a bounded local decision
+log. See [Automatic resets](docs/AUTOMATIC_RESETS.md) for the response workflow
+and logging details.
+
 The installer records preferences at `CODEX_HOME/lugui-agent-pack/preferences.json`.
 Enabling installs `CODEX_HOME/hooks/usage_quota_check.py` and registers it in
-`CODEX_HOME/hooks.json`. Declining a new installation creates neither the hook script nor
-its registration. Disabling a previously enabled installation removes the pack's two
-registrations and retains the dormant script and history.
+`CODEX_HOME/hooks.json`. Windows also receives a readable `usage_quota_check.ps1`
+launcher, invoked with PowerShell's `-File` option. Linux runs Python directly and
+requires no PowerShell. Declining a new installation creates no hook scripts or
+registrations. Disabling a previously enabled installation removes the pack's two
+registrations and retains the dormant scripts and history.
 
 If a conflict blocks disable, no preferences have changed. To revoke opt-in immediately,
 set `automaticResets.enabled` to `false` in the saved preferences file, preserving its

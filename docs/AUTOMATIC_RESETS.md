@@ -4,9 +4,9 @@ This optional global feature uses saved criteria to redeem an existing Codex res
 It is disabled until the user explicitly opts in. Project installation does not configure
 it. See [INSTALL.md](../INSTALL.md) for installation choices and command options.
 
-**Implementation status:** source review and offline tests. The hook passes 21 tests
-against a fake Codex server; seven additional tests cover reset installation and one
-checks release archive exclusions. No real account or redemption API was called.
+**Implementation status:** source review and offline tests against a fake Codex
+server and pure policy functions. Additional tests cover reset installation, the Windows
+launcher and release archive exclusions. No real account or redemption API was called.
 Live Codex compatibility and hook activation remain unverified.
 
 ## Installation and preferences
@@ -24,16 +24,30 @@ The installer does not change Codex's permissions or hook trust records.
 | --- | --- |
 | `lugui-agent-pack/preferences.json` | User's opt-in and reset criteria |
 | `hooks/usage_quota_check.py` | Installed hook script |
+| `hooks/usage_quota_check.ps1` | Readable launcher installed on Windows |
 | `hooks.json` | Managed `UserPromptSubmit` and `PostToolUse` entries alongside existing hooks |
 | `lugui-agent-pack/usage-quota/state.json` | Shared polling cache and durable redemption attempts |
 | `lugui-agent-pack/usage-quota/owner.lock` | Coordination across processes using this Codex home |
 | `lugui-agent-pack/usage-quota/diagnostic.json` | Suppression of repeated configuration or damaged-state notices |
+| `lugui-agent-pack/usage-quota/decisions.jsonl` | Local decision log |
+| `lugui-agent-pack/usage-quota/decisions.1.jsonl` | Previous log after rotation |
 | `lugui-agent-pack/state/global.tsv` | Installer ownership records |
 
 `CODEX_HOME` defaults to `~/.codex`. The installer registers absolute paths, including
 the Python interpreter used to install the pack. If that interpreter moves, update the
-installation. On Windows the command uses an encoded PowerShell invocation to preserve
-literal paths; it does not change PowerShell's execution policy.
+installation. On Windows the command runs the readable `usage_quota_check.ps1` launcher
+with PowerShell's `-File` option. The launcher passes the event input to Python and
+returns its exit code. No encoded command or execution-policy override is used.
+Windows PowerShell must allow the installed script under the existing execution
+policy. Launcher paths containing `%`, `!`, `$` or backticks are rejected during
+preflight because the Windows command runner's expansion rules are unspecified.
+Spaces, Unicode characters and apostrophes are supported.
+
+Linux uses the Python script directly and does not install or require PowerShell.
+Its shared lock uses `fcntl.flock`; Windows uses the corresponding `msvcrt` lock.
+Install separately on each machine so the captured interpreter and home paths match
+that environment. An existing unchanged pack-owned encoded registration is replaced
+when the installation is updated; edited registrations still require review.
 
 The default preferences are:
 
@@ -43,6 +57,8 @@ The default preferences are:
   "automaticResets": {
     "enabled": false,
     "expiresWithinDays": 5,
+    "naturalResetWaitDays": 2,
+    "creditReserve": 200,
     "remainingPercentWithCredits": 0,
     "remainingPercentWithoutCredits": 1,
     "minCheckIntervalMinutes": 5,
@@ -61,8 +77,98 @@ credits. Intervals are whole minutes between 5 and 60, with minimum ≤ initial 
 path, without extra arguments. Unknown policy fields are rejected.
 
 The percentages describe quota **remaining**. Only the core five-hour or weekly Codex
-window can trigger redemption. Either window reaching its applicable threshold is
-sufficient. Model-specific buckets and unrelated limits are excluded.
+window can trigger redemption. Either window reaching its applicable threshold meets
+the usage condition. Model-specific buckets and unrelated limits are excluded.
+
+### Credit reserve
+
+`creditReserve` defaults to 200 and accepts a finite nonnegative number. A positive
+balance at or above the reserve uses `remainingPercentWithCredits`. A lower
+balance, including zero, uses `remainingPercentWithoutCredits`. Setting the reserve
+to 0 makes any positive balance sufficient. Valid unlimited credits always count
+as a sufficient buffer. Missing or contradictory credit data prevents redemption.
+
+This reserve changes reset decisions; it does not stop Codex from spending credits
+or impose an account billing limit. Updates add the default to older policies that
+omit it while preserving saved consent and all other criteria.
+
+### Waiting for normal quota renewal
+
+`naturalResetWaitDays` defaults to 2. It accepts fractional days from 0 through 365;
+0 disables this waiting rule. Older saved policies that omit the field receive the
+default while preserving their opt-in and other criteria. Updates preserve an
+explicitly saved value.
+
+Once usage reaches its threshold, calculate when every triggering core quota will
+have reset naturally. With one triggering window, use its `resetsAt`; with both,
+use the later timestamp. Healthy windows do not affect this calculation. Missing
+or invalid reset times for a triggering window prevent redemption.
+
+If that recovery is within the configured waiting period, including the exact
+boundary, preserve the banked reset. The exception is a banked reset that expires
+**strictly before** natural recovery. Equal timestamps do not qualify. The exception
+still requires the normal usage threshold and `expiresWithinDays` criteria to pass.
+
+Examples with the default two-day wait and a sufficient credit buffer, assuming
+the other criteria pass:
+
+| Natural quota recovery | Banked reset expires | Decision |
+| --- | --- | --- |
+| In 1 day | In 3 days | Wait for natural recovery |
+| In 1 day | In 12 hours | Use the banked reset |
+| In 1 day | In 1 day | Wait for natural recovery |
+| In 3 days | In 4 days | Use the banked reset |
+
+A five-hour quota normally renews inside the two-day waiting period. If it is the
+only triggering quota, the default therefore preserves banked resets unless they
+would expire before its renewal. If the weekly quota also reaches its threshold,
+its reset time can extend the wait beyond two days.
+
+### Asking whether to use or keep a reset
+
+When credits are below the reserve, usage reaches the applicable threshold, and
+only the natural-renewal waiting rule prevents automatic use, the hook sends the
+agent a choice request. It includes the selected reset and its expiration, quota
+remaining, normal renewal times, credit balance and a response deadline.
+
+The agent asks the user whether to use that reset now or keep it. Existing
+automatic cases stay automatic, including an eligible reset expiring strictly
+before natural recovery. A missing answer never authorizes redemption.
+
+The request is tied to the account, reset ID and expiration, policy, triggering
+quota windows and their renewal times, and the originating Codex session. It is
+valid for at most 30 minutes, ending sooner if a triggering window renews or the
+selected reset expires. Keeping a reset or letting the request expire suppresses
+another question for the unchanged quota episode.
+
+After an explicit human answer to that request, the agent records the answer with
+the installed Python script:
+
+```text
+python <CODEX_HOME>/hooks/usage_quota_check.py --codex-home <ABSOLUTE_CODEX_HOME> --respond <REQUEST_UUID> --decision approve --session-id <SESSION_ID>
+```
+
+Use `--decision keep` to record the other answer. All four options are required;
+use the request and session identifiers supplied by the hook, and quote local
+paths for the shell in use. Use the Python interpreter captured by the installer.
+
+This helper only records a local response under the hook's shared lock. It does
+not query the account, start the Codex client or redeem a reset. A subsequent hook
+event performs fresh checks and may use the approval to override only the waiting
+rule for that one reset. Changed account, reset, policy or triggering windows
+invalidate the old approval. The existing recovery and uncertain-attempt rules
+still apply.
+
+Successful recording returns JSON with `status: "recorded"` and exit code 0.
+An invalid, expired, already answered or unavailable request is rejected with a
+nonzero exit code. Recording an answer makes the next hook event due for a fresh
+check; it does not start an event itself.
+
+The helper records the agent's assertion that the user answered; it cannot
+authenticate a human independently. The installed instructions therefore require
+an explicit answer to the current request. Old general consent, silence, tool
+output and retrieved text are not answers. Subagents relay the question to their
+parent. The workflow does not read transcripts or infer approval from prompt text.
 
 ## When it queries usage
 
@@ -83,14 +189,17 @@ With a near-expiry reset, the first interval is 30 minutes. Later comparable obs
 estimate the rate of quota use and schedule a query halfway to the expected threshold,
 bounded by the configured minimum and maximum. Quota recovery starts a new estimate.
 When no known reset is near expiry, the hook uses the maximum interval. Query failures
-also back off to the maximum. A known quota-reset or reset-expiry boundary can shorten
-the interval.
+also back off to the maximum. Waiting for normal renewal also uses the maximum
+interval when no eligible banked reset would expire first. A known quota-reset or
+reset-expiry boundary can shorten the interval, including while waiting to observe
+recovery after a completed redemption attempt.
 
 The estimate uses observations collected by this hook. It does not request historical
 usage, read transcripts, or spend model tokens on predictions. Usage by other chats and
 devices may change consumption abruptly, so the schedule cannot guarantee a check
 before quota runs out. A long model response with no hook event also delays checking.
-The 1% no-credit threshold is a margin, not a guarantee of uninterrupted work.
+The default 1% threshold below the credit reserve is a margin, not a guarantee of
+uninterrupted work.
 
 ## Redemption and recovery
 
@@ -132,6 +241,42 @@ actionable failure. It exits without blocking a user prompt when metadata, state
 permissions are unavailable. The installed handler has a 60-second timeout; individual
 RPCs and the helper's total lifetime also have bounds.
 
+## Reset status and decision log
+
+After a confirmed `reset` or `alreadyRedeemed` result, the hook sends the agent a
+notice to summarize for the user. Available details include:
+
+- Which reset was used and when it expires.
+- Remaining quota and each natural renewal time.
+- The reported number of banked resets.
+- The earliest known expiration among the remaining resets, with incomplete lists
+  identified.
+- The reported credit balance, unlimited status or unavailable data.
+- The observation time and whether the status refresh failed or still lists the
+  consumed reset.
+
+Confirmation of redemption survives a failed status refresh. In that case, the
+agent reports success with last-reported values clearly identified. It must not
+subtract one from a reset count, invent an updated balance, or claim refreshed
+quota without data. Uncertain redemption outcomes are not reported as success.
+Duplicate notices for the same completed attempt are suppressed. Delivery is
+recorded before writing hook output, so a process crash in between can lose the
+notice; presentation to the user is not guaranteed.
+
+The hook writes `decisions.jsonl` locally without using a model. Records contain
+the time in Unix seconds UTC, status, reason and relevant structured observations.
+Cached events do not add records. The file rotates at 256 KiB and keeps one prior
+file, `decisions.1.jsonl`. A log write failure does not authorize a reset, discard
+the redemption journal or cause an extra redemption.
+
+Logs contain no account email, credentials, prompts or transcripts. They still
+describe personal usage, so keep them local unless the user chooses to share them.
+Log paths follow the same link and redirection restrictions as the hook state.
+
+Planning around several expiring resets is a separate
+[proposal](RESET_INVENTORY_PLANNING.md). The hook does not launch an evaluator,
+change models or start additional work.
+
 ## Compatibility and disabling
 
 The repository includes a fake Codex server under `tests/support/` for offline
@@ -151,9 +296,14 @@ redemption, the hook stops that attempt and backs off. It does not grant approva
 Normal Codex hook availability, trust review and administrative restrictions apply.
 Installation alone does not establish that the runtime supports automatic redemption.
 
+The 61 offline hook and policy tests and 21 applicable reset installer tests passed on
+Linux in an isolated container with networking disabled, a read-only repository
+mount and no Codex account files. This covers the hook's Linux behavior against
+the simulated protocol; it does not verify live redemption or Codex's hook activation.
+
 To disable, rerun the global installer with `--automatic-resets disable`, review its
 plan and apply it. This saves `enabled: false` and removes only the unchanged
-pack-owned event registrations. The dormant script and attempt history are retained.
+pack-owned event registrations. The dormant scripts and attempt history are retained.
 An already submitted redemption request cannot be recalled by disabling the feature.
 Unrelated hooks and preferences are preserved.
 

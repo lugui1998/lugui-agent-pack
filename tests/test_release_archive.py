@@ -56,6 +56,7 @@ class ReleaseArchiveTests(unittest.TestCase):
             included = {
                 "kit.json", "AGENTS.md", "scripts/install.py",
                 "scripts/reset_install.py", "scripts/hooks/usage_quota_check.py",
+                "scripts/hooks/usage_quota_check.ps1",
             }
             excluded = {
                 "tests/README.md", "tests/test_usage_quota_check.py",

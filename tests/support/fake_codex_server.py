@@ -106,7 +106,7 @@ def install_boundary(home: Path):
     return run, popen
 
 
-def run_hook(home: Path) -> int:
+def run_hook(home: Path, helper_args: list[str] | None = None) -> int:
     install_boundary(home)
     spec = importlib.util.spec_from_file_location("offline_usage_quota_hook", HOOK)
     if spec is None or spec.loader is None:
@@ -125,6 +125,12 @@ def run_hook(home: Path) -> int:
     hook.RPC_TIMEOUT = 5.0 if scenario.get("pauseOnSnapshot") else 0.5
     hook.PROCESS_BUDGET = 15.0 if scenario.get("pauseOnSnapshot") else 5.0
     sys.argv = [str(HOOK), "--codex-home", str(home)]
+    if helper_args is not None:
+        sys.argv.extend(helper_args)
+        def no_rpc(*_args, **_kwargs):
+            raise BoundaryViolation("response helper must never query an account")
+        hook.Rpc = no_rpc
+        hook.executable = no_rpc
     return hook.main()
 
 
@@ -162,6 +168,9 @@ def serve(home: Path) -> int:
         elif method == "account/rateLimits/read":
             result = scripted("snapshots", {})
             index = indices["snapshots"]
+            if scenario.get("failOnSnapshot") == index:
+                print(json.dumps({"id": request["id"], "error": {"code": -1, "message": "fake refresh error"}}), flush=True)
+                continue
             if scenario.get("pauseOnSnapshot") == index:
                 (home / "server-paused").touch()
                 deadline = time.monotonic() + 10
@@ -204,13 +213,15 @@ def serve(home: Path) -> int:
 
 
 def main() -> int:
-    if len(sys.argv) != 3 or sys.argv[1] not in {"--serve", "--run-hook"}:
+    if len(sys.argv) < 3 or sys.argv[1] not in {"--serve", "--run-hook", "--respond-hook"}:
         return 2
     home = Path(sys.argv[2])
     if not home.is_absolute() or not (home / ".offline-quota-fixture").is_file():
         return 3
     if os.environ.get("CODEX_HOME") != str(home):
         return 4
+    if sys.argv[1] == "--respond-hook":
+        return run_hook(home, sys.argv[3:])
     return run_hook(home) if sys.argv[1] == "--run-hook" else serve(home)
 
 

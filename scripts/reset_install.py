@@ -6,10 +6,10 @@ The source hook is loaded only to validate policy data through its pure API.
 
 from __future__ import annotations
 
-import base64
 import copy
 import importlib.util
 import json
+import re
 import shlex
 import stat
 import sys
@@ -18,6 +18,8 @@ from pathlib import Path
 
 OVERRIDES = {
     "reset_expiry_days": "expiresWithinDays",
+    "reset_natural_wait_days": "naturalResetWaitDays",
+    "reset_credit_reserve": "creditReserve",
     "reset_remaining_with_credits": "remainingPercentWithCredits",
     "reset_remaining_without_credits": "remainingPercentWithoutCredits",
     "reset_min_check_minutes": "minCheckIntervalMinutes",
@@ -26,6 +28,31 @@ OVERRIDES = {
     "reset_codex_command": "codexCommand",
 }
 EVENTS = ("UserPromptSubmit", "PostToolUse")
+
+
+def windows_launcher_command(path: Path) -> str:
+    """Quote the -File path for both cmd.exe and PowerShell command runners.
+
+    Codex does not document which Windows shell processes commandWindows.
+    Reject expansion characters whose meaning differs between those shells.
+    """
+    value = str(path)
+    if any(character in value for character in '%!$`"\r\n'):
+        raise ValueError("Windows hook launcher path contains unsupported shell expansion characters (% ! $ ` or quotes/newlines)")
+    return f'powershell.exe -NoLogo -NoProfile -NonInteractive -File "{value}"'
+
+
+def render_windows_launcher(source: Path, executable: str, script: Path, home: Path) -> bytes:
+    """Render a shipped template; Windows PowerShell needs a BOM for UTF-8 paths."""
+    result = source.read_text(encoding="utf-8")
+    values = {
+        "@@PYTHON@@": executable,
+        "@@HOOK@@": str(script),
+        "@@CODEX_HOME@@": str(home),
+    }
+    # One replacement pass keeps literal placeholder-like text in a path intact.
+    result = re.sub(r"@@(?:PYTHON|HOOK|CODEX_HOME)@@", lambda match: "'" + values[match[0]].replace("'", "''") + "'", result)
+    return result.encode("utf-8-sig")
 
 
 def require_plain_preferences(path: Path) -> None:
@@ -77,8 +104,14 @@ def policy_api(source: Path):
 def prompt_policy(defaults: dict) -> dict | None:
     print("Automatic resets may redeem an available reset using your saved policy. "
           "Installation does not check usage or redeem a reset.")
-    print("Defaults: expire within 5 days; remaining quota 0% with credits or 1% without; "
+    print("Defaults: expire within 5 days; remaining quota 0% with a balance of at least 200 credits or 1% below that reserve; "
+          "skip redemption if normal recovery is within 2 days unless the banked reset expires strictly before recovery; "
           "checks start at 30 minutes and stay between 5 and 60 minutes.")
+    print("Set naturalResetWaitDays to 0 to disable only the normal recovery guard.")
+    print("Set creditReserve to 0 to treat any positive credit balance as a buffer. "
+          "When the normal recovery guard blocks an otherwise eligible reset, quota is at its trigger, "
+          "and balance is below the reserve, the agent asks whether to use the reset or wait. "
+          "Eligible cases, including a reset expiring before normal recovery, remain automatic.")
     choice = input("Automatic resets: [e]nable defaults, [c]ustomize, [d]isable: ").strip().lower()
     if choice in ("d", "disable"):
         return {**defaults, "enabled": False}
@@ -140,13 +173,13 @@ def plan_hooks(installer, record_type, source: Path, enabled: bool) -> None:
     executable = str(Path(sys.executable).resolve())
     arguments = [executable, str(script), "--codex-home", str(installer.home)]
     command = shlex.join(arguments)
-    windows_program = "& " + " ".join("'" + value.replace("'", "''") + "'" for value in arguments)
-    windows_program += "; exit $LASTEXITCODE"
-    encoded = base64.b64encode(windows_program.encode("utf-16-le")).decode("ascii")
-    windows_command = "powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand " + encoded
-    desired = {"hooks": [{
-        "type": "command", "command": command, "commandWindows": windows_command, "timeout": 60,
-    }]}
+    handler = {"type": "command", "command": command, "timeout": 60}
+    launcher = installer.home / "hooks" / "usage_quota_check.ps1"
+    launcher_source = None
+    if sys.platform == "win32" and enabled:
+        handler["commandWindows"] = windows_launcher_command(launcher)
+        launcher_source = installer.manifest_source("usageQuotaWindowsLauncher")
+    desired = {"hooks": [handler]}
     records = []
     removals = []
     for event in EVENTS:
@@ -154,7 +187,9 @@ def plan_hooks(installer, record_type, source: Path, enabled: bool) -> None:
         old = installer.owned("reset-hook", path, owner)
         entries = hooks.get(event, [])
         matches = [index for index, item in enumerate(entries) if old and installer.value_hash(item) == old.hash]
-        collisions = [index for index, item in enumerate(entries) if "usage_quota_check.py" in json.dumps(item)]
+        collisions = [index for index, item in enumerate(entries) if any(
+            name in json.dumps(item) for name in ("usage_quota_check.py", "usage_quota_check.ps1")
+        )]
         if old and len(matches) != 1:
             installer.conflict(path, f"owned {event} handler is missing, duplicated or modified")
             continue
@@ -178,6 +213,11 @@ def plan_hooks(installer, record_type, source: Path, enabled: bool) -> None:
 
     if enabled:
         installer.plan_file("reset-hook-script", source, script)
+        if launcher_source is not None:
+            installer.plan_file(
+                "reset-hook-launcher", launcher_source, launcher,
+                payload=render_windows_launcher(launcher_source, executable, script, installer.home),
+            )
     elif script.exists():
         installer.notice(script, "disabled hook script is retained dormant; no script is executed during installation")
     if result == original:

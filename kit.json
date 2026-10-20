@@ -12,6 +12,7 @@
   },
   "projectConfig": ".codex/config.toml",
   "usageQuotaHook": "scripts/hooks/usage_quota_check.py",
+  "usageQuotaWindowsLauncher": "scripts/hooks/usage_quota_check.ps1",
   "skill": {
     "name": "stop-slop",
     "source": ".agents/skills/stop-slop",

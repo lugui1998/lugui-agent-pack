@@ -306,10 +306,11 @@ class Installer:
         if path.is_file():
             self.action("BACKUP", path, str(self.backup_path(path)))
 
-    def plan_file(self, kind: str, source: Path, target: Path) -> None:
+    def plan_file(self, kind: str, source: Path, target: Path, *, payload: bytes | None = None) -> None:
         if not self.require_target(target):
             return
-        payload = source.read_bytes()
+        # Rendered templates retain the shipped source identity and normal file ownership.
+        payload = source.read_bytes() if payload is None else payload
         wanted = self.sha_bytes(payload)
         source_id = self.source_id(source)
         old = self.owned(kind, target)
@@ -1031,6 +1032,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--skills", choices=("skip", "install"), default="skip")
     parser.add_argument("--automatic-resets", choices=("ask", "enable", "disable", "preserve"), default="ask")
     parser.add_argument("--reset-expiry-days", type=float)
+    parser.add_argument("--reset-natural-wait-days", type=float)
+    parser.add_argument("--reset-credit-reserve", type=float)
     parser.add_argument("--reset-remaining-with-credits", type=float)
     parser.add_argument("--reset-remaining-without-credits", type=float)
     parser.add_argument("--reset-min-check-minutes", type=int)
@@ -1046,7 +1049,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     reset_overrides = any(
         getattr(args, name) is not None
         for name in (
-            "reset_expiry_days", "reset_remaining_with_credits", "reset_remaining_without_credits",
+            "reset_expiry_days", "reset_natural_wait_days", "reset_credit_reserve",
+            "reset_remaining_with_credits", "reset_remaining_without_credits",
             "reset_min_check_minutes", "reset_max_check_minutes", "reset_initial_check_minutes",
             "reset_codex_command",
         )

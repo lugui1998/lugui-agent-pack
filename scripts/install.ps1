@@ -8,6 +8,8 @@ param(
     [ValidateSet('Skip','Install')][string]$Skills = 'Skip',
     [ValidateSet('Ask','Enable','Disable','Preserve')][string]$AutomaticResets = 'Ask',
     [double]$ResetExpiryDays,
+    [double]$ResetNaturalWaitDays,
+    [double]$ResetCreditReserve,
     [double]$ResetRemainingWithCredits,
     [double]$ResetRemainingWithoutCredits,
     [int]$ResetMinCheckMinutes,
@@ -22,6 +24,8 @@ if (-not $python) { $python = Get-Command python -ErrorAction Stop }
 $arguments = @((Join-Path $PSScriptRoot 'install.py'), '--scope', $Scope.ToLowerInvariant(), '--instructions', $Instructions.ToLowerInvariant(), '--config', $Config.ToLowerInvariant(), '--global-defaults', $GlobalDefaults.ToLowerInvariant(), '--skills', $Skills.ToLowerInvariant(), '--automatic-resets', $AutomaticResets.ToLowerInvariant())
 $resetOptions = @{
     ResetExpiryDays = '--reset-expiry-days'
+    ResetNaturalWaitDays = '--reset-natural-wait-days'
+    ResetCreditReserve = '--reset-credit-reserve'
     ResetRemainingWithCredits = '--reset-remaining-with-credits'
     ResetRemainingWithoutCredits = '--reset-remaining-without-credits'
     ResetMinCheckMinutes = '--reset-min-check-minutes'
