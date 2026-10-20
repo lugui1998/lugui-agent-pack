@@ -81,3 +81,11 @@ Evidence packets include the question/searched scope, direct source URLs, publis
 ## Runtime hygiene
 
 Check for existing tool servers and services before starting another copy. Assign ownership of shared sessions and task processes. Reuse suitable running services. Clean up only processes and temporary resources started for this task when no longer needed. Avoid oversubscribing CPU, memory or shared tool limits; measure contention before increasing concurrency.
+
+## Lugui Agent Pack updates
+
+Use the installation scope and target recorded in the installed managed block when the user asks to update the Lugui Agent Pack. An explicit user request for another scope takes precedence. If installation metadata is absent, inspect the installed instruction files and installer state to identify the target. Compare the installed block's version with the release; the version of a source checkout alone does not establish the installed version. Use the installer from the latest published release to update the managed instructions and agent files. Preserve custom instructions outside the managed block.
+
+On a new global installation, ask whether to enable automatic banked resets. Explain the defaults: a reset expires within five days, and remaining quota reaches 0% when credits are available or 1% without credits. Offer custom thresholds or disabling the feature. Record the user's choice through the installer's reset-policy options; never infer opt-in from installing or updating the pack. Preserve the saved choice and criteria on updates. Project installations leave this global preference alone.
+
+When the optional quota hook is installed, it owns scheduled usage checks and reset coordination. Do not add routine usage queries in the main agent or subagents. Explicit user requests for usage information still apply. Installation and dry-run planning must not execute the hook or redeem a reset. See `INSTALL.md` and `docs/AUTOMATIC_RESETS.md` in the pack source for the installation options and runtime requirements.

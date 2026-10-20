@@ -271,6 +271,7 @@ class Installer:
             )
         payload = ("\n".join(lines) + "\n").encode("utf-8")
         temporary = self.state_path.with_name(f".{self.state_path.name}.{os.getpid()}.tmp")
+        self.assert_target(temporary, self.home)
         temporary.write_bytes(payload)
         os.replace(temporary, self.state_path)
 
@@ -287,6 +288,7 @@ class Installer:
             shutil.copy2(path, destination)
         path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+        self.assert_target(temporary)
         temporary.write_bytes(payload)
         os.replace(temporary, path)
 
@@ -336,6 +338,23 @@ class Installer:
 
     def instruction_block(self, newline: str = "\n") -> str:
         source = self.instructions_source.read_text(encoding="utf-8").replace("\r\n", "\n").rstrip()
+        if "usageQuotaHook" in self.manifest:
+            if self.args.scope == "global":
+                hint = (
+                    "This managed block is installed globally. Updates should use --scope global. "
+                    f"For updates, CODEX_HOME must resolve to this installed absolute home: {json.dumps(str(self.home))}. "
+                    "Automatic reset preferences belong to the user in "
+                    "$CODEX_HOME/lugui-agent-pack/preferences.json; preserve that saved choice and "
+                    "its parameters when updating. Only an explicit user choice may enable resets. "
+                    "The installed usage hook reads that file; personal preferences must not be copied into kit sources."
+                )
+            else:
+                hint = (
+                    "This managed block is installed for this project. Updates should use --scope project "
+                    f"with --target-project {json.dumps(str(self.project))}. Project installs do not manage automatic "
+                    "reset preferences or global hooks."
+                )
+            source += "\n\n## Installed scope\n\n" + hint
         return newline.join((self.begin, f"kit-version: {self.manifest['version']}", source, self.end))
 
     def plan_instructions(self) -> None:
@@ -914,6 +933,16 @@ class Installer:
     def plan(self) -> None:
         if not self.state_path_safe:
             self.conflict(self.state_path, f"resolved state path escapes intended root {self.home}")
+        if "usageQuotaHook" in self.manifest:
+            # Planning must not create source-tree __pycache__ files either.
+            previous_bytecode = sys.dont_write_bytecode
+            sys.dont_write_bytecode = True
+            try:
+                from reset_install import plan_automatic_resets
+
+                plan_automatic_resets(self, StateRecord)
+            finally:
+                sys.dont_write_bytecode = previous_bytecode
         self.plan_instructions()
         if not self.agents_source.is_dir():
             self.conflict(self.agents_source, "kit agent source directory is unavailable")
@@ -939,10 +968,22 @@ class Installer:
 
     def commit(self) -> int:
         if self.choices:
-            print("error: explicit --instructions choice is required", file=sys.stderr)
+            print("error: explicit choices required; resolve the PROMPT entries above", file=sys.stderr)
         if self.conflicts:
             print(f"warning: {self.conflicts} conflict(s) require review; preflight made no target changes", file=sys.stderr)
         if self.choices or self.conflicts:
+            if (
+                self.args.scope == "global"
+                and "usageQuotaHook" in self.manifest
+                and self.args.automatic_resets == "disable"
+            ):
+                preferences = self.home / "lugui-agent-pack" / "preferences.json"
+                print(
+                    "warning: no reset preference was changed. To revoke an existing enabled policy immediately, "
+                    f"set automaticResets.enabled to false in {preferences}; "
+                    "then rerun --automatic-resets disable for owned hook cleanup.",
+                    file=sys.stderr,
+                )
             return 2
         if not self.args.apply:
             print("Dry run complete. Re-run with --apply after review.")
@@ -988,12 +1029,30 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--config", choices=("preserve", "merge", "replace"), default="merge")
     parser.add_argument("--global-defaults", choices=("preserve", "merge", "replace"), default="preserve")
     parser.add_argument("--skills", choices=("skip", "install"), default="skip")
+    parser.add_argument("--automatic-resets", choices=("ask", "enable", "disable", "preserve"), default="ask")
+    parser.add_argument("--reset-expiry-days", type=float)
+    parser.add_argument("--reset-remaining-with-credits", type=float)
+    parser.add_argument("--reset-remaining-without-credits", type=float)
+    parser.add_argument("--reset-min-check-minutes", type=int)
+    parser.add_argument("--reset-max-check-minutes", type=int)
+    parser.add_argument("--reset-initial-check-minutes", type=int)
+    parser.add_argument("--reset-codex-command")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--update", action="store_true")
     args = parser.parse_args(argv)
     if args.apply and args.dry_run:
         parser.error("choose either --dry-run or --apply")
+    reset_overrides = any(
+        getattr(args, name) is not None
+        for name in (
+            "reset_expiry_days", "reset_remaining_with_credits", "reset_remaining_without_credits",
+            "reset_min_check_minutes", "reset_max_check_minutes", "reset_initial_check_minutes",
+            "reset_codex_command",
+        )
+    )
+    if args.scope == "project" and (args.automatic_resets == "enable" or reset_overrides):
+        parser.error("automatic reset enablement and custom settings require --scope global")
     if not args.apply:
         args.dry_run = True
     if args.scope == "global" and args.global_defaults != "preserve":

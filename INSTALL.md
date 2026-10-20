@@ -28,6 +28,9 @@ Inspect my CODEX_HOME and existing agent setup first. Run the installer in
 dry-run mode, preserve existing settings, report conflicts, and ask for
 confirmation before writing outside the current project. If an AGENTS.md
 already exists, ask me whether to append, overwrite, or skip it.
+
+Ask whether I want automatic banked resets. Explain the default criteria,
+let me customize them or decline, and save my choice for future updates.
 ```
 
 The agent should inspect the installer and manifest before running them. The repository's normal
@@ -71,6 +74,77 @@ python scripts/install.py --scope global --instructions append --global-defaults
 python scripts/install.py --scope global --instructions append --global-defaults merge --skills install --apply
 ```
 
+On a first global install, an interactive terminal also asks whether to enable automatic
+banked resets, customize their criteria, or disable them. A noninteractive install requires
+an explicit `--automatic-resets enable` or `--automatic-resets disable` choice when no saved
+choice exists. An unresolved choice blocks apply. Dry-run choices are displayed but are
+not saved; pass the same options when applying.
+
+For example, to install globally with automatic resets disabled:
+
+```text
+python scripts/install.py --scope global --instructions append --automatic-resets disable --dry-run
+python scripts/install.py --scope global --instructions append --automatic-resets disable --apply
+```
+
+The PowerShell equivalent is `-AutomaticResets Disable`. The shell wrapper forwards the
+Python options unchanged.
+
+## Optional automatic banked resets
+
+The default criteria, once explicitly enabled, are:
+
+- A banked reset expires within five days.
+- Either the five-hour or weekly core quota has 0% remaining when credits are available,
+  or at most 1% remaining without credits.
+- Usage queries begin with a 30-minute interval and adapt within a 5–60-minute range.
+  Every redemption requires fresh account, quota and reset details.
+
+To preview enabling the feature with custom criteria:
+
+```text
+python scripts/install.py --scope global --instructions append --automatic-resets enable --reset-expiry-days 3 --reset-remaining-with-credits 0 --reset-remaining-without-credits 1 --dry-run
+```
+
+Replace `--dry-run` with `--apply` only after reviewing the plan. Installation itself does
+not query the account or redeem a reset. Once an enabled hook is trusted and runs in Codex,
+it can redeem a reset automatically without asking again.
+
+| Python option | PowerShell option | Default |
+| --- | --- | --- |
+| `--automatic-resets` | `-AutomaticResets` | `ask` |
+| `--reset-expiry-days` | `-ResetExpiryDays` | `5` |
+| `--reset-remaining-with-credits` | `-ResetRemainingWithCredits` | `0` |
+| `--reset-remaining-without-credits` | `-ResetRemainingWithoutCredits` | `1` |
+| `--reset-min-check-minutes` | `-ResetMinCheckMinutes` | `5` |
+| `--reset-initial-check-minutes` | `-ResetInitialCheckMinutes` | `30` |
+| `--reset-max-check-minutes` | `-ResetMaxCheckMinutes` | `60` |
+| `--reset-codex-command` | `-ResetCodexCommand` | `codex` |
+
+`ask` preserves an existing saved choice; it prompts only when no choice exists. `preserve`
+also retains saved preferences and reports an unresolved choice if none exists.
+`enable` and `disable` explicitly change that choice. Individual criteria override only
+their corresponding saved values. Explicit enable or custom reset options require global
+scope. Project installs do not read or change these global preferences.
+
+The installer records preferences at `CODEX_HOME/lugui-agent-pack/preferences.json`.
+Enabling installs `CODEX_HOME/hooks/usage_quota_check.py` and registers it in
+`CODEX_HOME/hooks.json`. Declining a new installation creates neither the hook script nor
+its registration. Disabling a previously enabled installation removes the pack's two
+registrations and retains the dormant script and history.
+
+If a conflict blocks disable, no preferences have changed. To revoke opt-in immediately,
+set `automaticResets.enabled` to `false` in the saved preferences file, preserving its
+other fields, then resolve the installer conflict to clean up registrations. A request
+already submitted to Codex cannot be recalled.
+
+The feature requires a compatible, signed-in Codex CLI and Codex's normal hook trust
+review. It does not enable Codex hooks globally, change redemption permissions, or approve
+its own hook definitions. See [Automatic resets](docs/AUTOMATIC_RESETS.md) for the policy,
+query schedule, compatibility requirements and limitations. The hook has been tested
+against a fake Codex server, and installer checks use temporary homes. Live redemption
+and Codex hook activation remain unverified.
+
 ## Safety contract
 
 The installers follow these rules:
@@ -78,7 +152,9 @@ The installers follow these rules:
 - Dry-run is available for every scope.
 - Planning is read-only. The installer parses the source and target TOML, checks instruction
   markers, ownership, roles, and skills, and computes every change before committing anything.
-  Any conflict or unresolved `--instructions ask` choice blocks the entire apply preflight.
+  Any conflict or unresolved instruction or automatic-reset choice blocks the entire apply
+  preflight. Planning and applying never run the quota hook, query account usage, or redeem
+  a reset.
 - When `kit.json` advertises an agent catalog, preflight checks its schema, role names, and
   model/effort agreement with the source role files. Missing or inconsistent role payloads block
   the whole apply. Legacy manifests without a catalog remain supported. This is an offline
@@ -95,7 +171,8 @@ The installers follow these rules:
   pre-existing unmanaged model value, so it may retain the user's current model. `replace`
   explicitly opts into the kit-owned values. Check the effective runtime configuration after
   installation because session and app overrides can still take precedence. Without either
-  option, global installation only adds roles and instructions. Authentication, plugins, MCP
+  option, global installation adds roles and instructions, plus explicitly selected optional
+  features. Authentication, plugins, MCP
   servers, and unrelated skills are not changed.
 - Managed configuration ownership is recorded per TOML key. A later kit update can update an
   unchanged kit-owned key while preserving unrelated user edits. A user edit to a managed key is
@@ -106,6 +183,9 @@ The installers follow these rules:
   and leaves all targets untouched.
 - Instruction changes use a managed block with explicit markers. Duplicate or malformed markers
   are conflicts; unmarked duplicate kit text produces a notice.
+- Installed instruction blocks record the selected scope and absolute target. Automatic-reset
+  preferences survive updates. Existing unrelated JSON preferences and hook entries are
+  preserved; a modified or ambiguous pack-owned hook entry blocks the update.
 - The installers do not remove files automatically; manual cleanup remains explicit.
 - State format v2 uses checkout-relative source identities and per-key configuration records.
   Compatible v1 state is read and upgraded conservatively. Moving the kit checkout therefore does

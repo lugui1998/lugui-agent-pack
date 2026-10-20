@@ -8,10 +8,6 @@ The pack also coordinates independent work in parallel, waits for real dependenc
 
 This kit contains instruction-driven routing and scheduling policies. It does not enforce a dependency graph or guarantee that a model will select the right role. The evaluation suite supplies fixtures and records available evidence; bounded behavioral and comparative evidence is linked from the completed checklist, with failures and limits retained.
 
-## Current status
-
-Version 1.3.1 routes roles previously assigned to GPT-5.6 Terra or GPT-6 Sol to GPT-6.1 Sol, while reserving Astra for the hardest cases. The main default remains Luna Medium; unnamed helpers use Luna Low. Role files pin both model and effort. Existing bounded Windows validation covers the previous role model assignments; this routing update has not been live-validated. See [validation/README.md](validation/README.md) for evidence and open limits.
-
 ## Contents
 
 - `AGENTS.md`: self-contained routing, escalation, parallelism, handoff and acceptance instructions.
@@ -22,8 +18,10 @@ Version 1.3.1 routes roles previously assigned to GPT-5.6 Terra or GPT-6 Sol to 
 - `scripts/agents.py`: generator and drift checker.
 - `scripts/runtime_probe.py`: metadata-only effective-configuration inspection, without sending a model turn.
 - `scripts/install.py`, `scripts/install.ps1`, `scripts/install.sh`: cross-platform installation with dry runs and ownership checks.
+- `scripts/reset_install.py`: optional global reset preferences and managed hook registration.
+- `scripts/hooks/usage_quota_check.py`: cached quota checks and automatic redemption when the saved policy permits it.
 - `evals/`: fixtures, frozen original configuration, comparison variants and live-run tooling.
-- `tests/`: offline checks for generation, installation and evaluation bookkeeping.
+- `tests/`: development-only offline checks, including a fake Codex server for reset scenarios; excluded from release archives and installations.
 - `.agents/skills/stop-slop/`: optional upstream writing skill, tracked as a Git submodule.
 
 Authentication, personal MCP settings, runtime databases and private session files are not part of the kit.
@@ -44,6 +42,8 @@ Role sandbox settings are defaults. Codex reapplies the parent turn's live permi
 
 To install into another project or globally, follow [INSTALL.md](INSTALL.md). Installing global roles alone does not change the main model; the installer provides an explicit global-defaults option. Existing user choices and unrelated settings are preserved according to the selected merge mode.
 
+Installed instruction blocks record their scope and target directory so later update requests can find the correct installation. Project installations leave global automatic-reset preferences alone.
+
 ## Develop and validate
 
 Use Python 3.11 or later, or Python 3.10 with `tomli`:
@@ -53,6 +53,11 @@ python -m pip install -r requirements.txt
 python scripts/agents.py --check
 python -m unittest discover -s tests
 ```
+
+Run tests from a full Git checkout. Release source archives omit `tests/` through
+`.gitattributes`, and the installer never copies the test server. The reset tests use
+simulated account data and isolated temporary homes; see `tests/README.md` in the
+checkout for the commands and isolation details.
 
 Edit the catalog or shared prompts, then regenerate:
 

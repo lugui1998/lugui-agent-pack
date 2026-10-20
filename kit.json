@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "name": "lugui-agent-pack",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "repository": "https://github.com/lugui1998/lugui-agent-pack.git",
   "instructions": {
     "source": "AGENTS.md",
@@ -11,6 +11,7 @@
     "source": ".codex/agents"
   },
   "projectConfig": ".codex/config.toml",
+  "usageQuotaHook": "scripts/hooks/usage_quota_check.py",
   "skill": {
     "name": "stop-slop",
     "source": ".agents/skills/stop-slop",
@@ -27,7 +28,7 @@
     "tests": "python -m unittest discover -s tests",
     "generation": "python scripts/agents.py --check",
     "evaluation": "evals/README.md",
-    "status": "released; see validation/README.md"
+    "status": "unreleased; see tests/README.md and validation/README.md"
   },
   "compatibility": {
     "targetCodex": "0.154.0-alpha.6.2",

@@ -28,6 +28,8 @@ class InstallerTests(unittest.TestCase):
         command = [sys.executable, str(installer), "--scope", scope]
         if scope == "project":
             command += ["--target-project", str(project)]
+        elif "--automatic-resets" not in args:
+            command += ["--automatic-resets", "disable"]
         return subprocess.run(command + list(args), text=True, capture_output=True, env=env)
 
     def current(self, project, home, *args, scope="project", extra_env=None):
@@ -37,6 +39,8 @@ class InstallerTests(unittest.TestCase):
         kit = parent / "kit"
         (kit / "scripts").mkdir(parents=True)
         shutil.copy2(INSTALLER, kit / "scripts" / "install.py")
+        shutil.copy2(ROOT / "scripts" / "reset_install.py", kit / "scripts" / "reset_install.py")
+        shutil.copytree(ROOT / "scripts" / "hooks", kit / "scripts" / "hooks", ignore=shutil.ignore_patterns("__pycache__"))
         shutil.copy2(ROOT / "kit.json", kit / "kit.json")
         shutil.copy2(ROOT / "AGENTS.md", kit / "AGENTS.md")
         shutil.copytree(ROOT / ".codex", kit / ".codex")
@@ -264,7 +268,8 @@ class InstallerTests(unittest.TestCase):
             self.assertEqual(instructions.read_text(encoding="utf-8"), "user instructions\n")
             self.assertFalse((project / ".codex").exists())
             self.assertFalse(home.exists())
-            self.assertIn("explicit --instructions choice", result.stderr)
+            self.assertIn("explicit choices required; resolve the PROMPT entries above", result.stderr)
+            self.assertIn("existing AGENTS.md found; choose --instructions append, overwrite, or skip", result.stdout)
 
     def test_root_keys_are_inserted_before_existing_tables(self):
         with tempfile.TemporaryDirectory() as directory:
