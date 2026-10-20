@@ -58,6 +58,7 @@ class Installer:
         self.operations: list[Operation] = []
         self.pending_state: list[StateRecord] = []
         self.state: list[StateRecord] = []
+        self.reset_trust_intent = None
         self.root = Path(__file__).resolve().parent.parent
         self.manifest = json.loads((self.root / "kit.json").read_text(encoding="utf-8"))
         if self.manifest.get("name") != "lugui-agent-pack":
@@ -1012,6 +1013,10 @@ class Installer:
         if failure is not None:
             print(f"warning: apply stopped after {completed} completed operation(s); their ownership state was saved", file=sys.stderr)
             return 2
+        if self.reset_trust_intent is not None:
+            from hook_trust import trust_installed_hooks
+
+            trust_installed_hooks(self, self.reset_trust_intent)
         print("Installation/update complete.")
         return 0
 

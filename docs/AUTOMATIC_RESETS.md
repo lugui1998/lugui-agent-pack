@@ -5,20 +5,25 @@ It is disabled until the user explicitly opts in. Project installation does not 
 it. See [INSTALL.md](../INSTALL.md) for installation choices and command options.
 
 **Implementation status:** source review and offline tests against a fake Codex
-server and pure policy functions. Additional tests cover reset installation, the Windows
-launcher and release archive exclusions. No real account or redemption API was called.
+server and pure policy functions. Additional tests cover reset installation, scoped
+hook trust, the Windows launcher and release archive exclusions. No real trust write,
+account or redemption API was called by these tests.
 Live Codex compatibility and hook activation remain unverified.
 
 ## Installation and preferences
 
 On the first global installation, the installer presents the defaults and asks the user
-to enable them, customize them, or disable the feature. An agent driving a noninteractive
-install must obtain the user's choice and pass it explicitly. Updating the pack preserves
-the saved choice and criteria unless the user requests a change.
+to enable them, customize them, or disable the feature. That question explains that
+enabling also authorizes installing and trusting its two hooks. No separate trust opt-in
+is needed. An agent driving a noninteractive install must obtain the user's choice and
+pass it explicitly. Updating the pack preserves the saved choice and criteria unless
+the user requests a change.
 
-Declining creates no hook script or registration. Enabling installs the hook and two
-event registrations. The user still reviews the hook through Codex's normal trust flow.
-The installer does not change Codex's permissions or hook trust records.
+Declining a fresh installation creates no hook script, registration or trust entry.
+Enabling installs the hook and two event registrations. After the complete installation
+and ownership-state save succeed, the installer attempts to trust those definitions
+through Codex's API. Dry runs, project installs, disabled reset management and failed
+installations do not make this trust request.
 
 | File under `CODEX_HOME` | Purpose |
 | --- | --- |
@@ -26,6 +31,7 @@ The installer does not change Codex's permissions or hook trust records.
 | `hooks/usage_quota_check.py` | Installed hook script |
 | `hooks/usage_quota_check.ps1` | Readable launcher installed on Windows |
 | `hooks.json` | Managed `UserPromptSubmit` and `PostToolUse` entries alongside existing hooks |
+| `config.toml` | Codex-managed `hooks.state` trust hashes for the two installed definitions |
 | `lugui-agent-pack/usage-quota/state.json` | Shared polling cache and durable redemption attempts |
 | `lugui-agent-pack/usage-quota/owner.lock` | Coordination across processes using this Codex home |
 | `lugui-agent-pack/usage-quota/diagnostic.json` | Suppression of repeated configuration or damaged-state notices |
@@ -48,6 +54,31 @@ Its shared lock uses `fcntl.flock`; Windows uses the corresponding `msvcrt` lock
 Install separately on each machine so the captured interpreter and home paths match
 that environment. An existing unchanged pack-owned encoded registration is replaced
 when the installation is updated; edited registrations still require review.
+
+### Hook trust during installation
+
+The installer lists hooks and matches the two owned user definitions by their source,
+event, command and metadata. It rechecks the installed scripts, registrations and
+saved opt-in before writing the exact hashes returned by Codex. It backs up the user
+configuration and supplies its version to `config/batchWrite`, so a concurrent
+configuration change prevents that write. The update touches only those trust entries
+under `hooks.state`, preserves unrelated settings and leaves disabled hooks disabled.
+An already trusted definition needs no write. The installer then checks the reported
+trust status again.
+
+This step uses `hooks/list`, `config/read` and `config/batchWrite` through the local
+Codex app-server transport. It starts no model turn, executes no quota hook and calls
+no account or redemption method. Trust allows later Codex events to run enabled hooks;
+it does not verify that live redemption works.
+
+If the CLI or trust API is unavailable, the definitions do not match, or verification
+fails, installation completes with a warning that activation is unverified. Use the
+printed source path and commands to find the pack's `UserPromptSubmit` and `PostToolUse`
+entries in Codex's Hooks settings, or CLI `/hooks`, and trust each one. If you disabled
+an entry, enable it there when you want it to run. Administrative restrictions still
+apply. The installer does not select Trust all or enable hooks globally.
+
+### Saved criteria
 
 The default preferences are:
 
@@ -293,7 +324,8 @@ turn and does not read authentication files or implement private HTTP endpoints.
 This pack preference does not change Codex's account-level permissions or the
 confirmation requirements of separate agent tools. If the account protocol rejects
 redemption, the hook stops that attempt and backs off. It does not grant approvals.
-Normal Codex hook availability, trust review and administrative restrictions apply.
+Normal Codex hook availability and administrative restrictions apply. If installation
+cannot verify trust, complete the manual trust step described above.
 Installation alone does not establish that the runtime supports automatic redemption.
 
 The 61 offline hook and policy tests and 21 applicable reset installer tests passed on

@@ -29,8 +29,9 @@ dry-run mode, preserve existing settings, report conflicts, and ask for
 confirmation before writing outside the current project. If an AGENTS.md
 already exists, ask me whether to append, overwrite, or skip it.
 
-Ask whether I want automatic banked resets. Explain the default criteria,
-let me customize them or decline, and save my choice for future updates.
+Ask whether I want automatic banked resets. Explain the default criteria and that
+enabling includes installing and trusting the pack's two reset hooks. Let me
+customize the criteria or decline, and save my choice for future updates.
 ```
 
 The agent should inspect the installer and manifest before running them. The repository's normal
@@ -75,10 +76,12 @@ python scripts/install.py --scope global --instructions append --global-defaults
 ```
 
 On a first global install, an interactive terminal also asks whether to enable automatic
-banked resets, customize their criteria, or disable them. A noninteractive install requires
-an explicit `--automatic-resets enable` or `--automatic-resets disable` choice when no saved
-choice exists. An unresolved choice blocks apply. Dry-run choices are displayed but are
-not saved; pass the same options when applying.
+banked resets, customize their criteria, or disable them. That same opt-in authorizes
+installing and trusting the two quota hooks; there is no separate trust question.
+A noninteractive install requires an explicit `--automatic-resets enable` or
+`--automatic-resets disable` choice when no saved choice exists. An unresolved choice
+blocks apply. Dry-run choices are displayed but are not saved; pass the same options
+when applying.
 
 For example, to install globally with automatic resets disabled:
 
@@ -114,8 +117,10 @@ python scripts/install.py --scope global --instructions append --automatic-reset
 ```
 
 Replace `--dry-run` with `--apply` only after reviewing the plan. Installation itself does
-not query the account or redeem a reset. Once an enabled hook is trusted and runs in Codex,
-it can redeem automatically when the saved criteria allow it. The choice described
+not query the account, execute the hook or redeem a reset. After a successful opted-in
+global apply, the installer attempts to trust its two hooks through Codex's API.
+Once an enabled hook is trusted and runs in Codex, it can redeem automatically when
+the saved criteria allow it. The choice described
 above applies when the waiting rule blocks automatic use.
 
 | Python option | PowerShell option | Default |
@@ -159,21 +164,27 @@ The installer records preferences at `CODEX_HOME/lugui-agent-pack/preferences.js
 Enabling installs `CODEX_HOME/hooks/usage_quota_check.py` and registers it in
 `CODEX_HOME/hooks.json`. Windows also receives a readable `usage_quota_check.ps1`
 launcher, invoked with PowerShell's `-File` option. Linux runs Python directly and
-requires no PowerShell. Declining a new installation creates no hook scripts or
-registrations. Disabling a previously enabled installation removes the pack's two
-registrations and retains the dormant scripts and history.
+requires no PowerShell. Declining a new installation creates no hook scripts,
+registrations or trust entries. Disabling a previously enabled installation removes
+the pack's two registrations and retains the dormant scripts and history.
 
 If a conflict blocks disable, no preferences have changed. To revoke opt-in immediately,
 set `automaticResets.enabled` to `false` in the saved preferences file, preserving its
 other fields, then resolve the installer conflict to clean up registrations. A request
 already submitted to Codex cannot be recalled.
 
-The feature requires a compatible, signed-in Codex CLI and Codex's normal hook trust
-review. It does not enable Codex hooks globally, change redemption permissions, or approve
-its own hook definitions. See [Automatic resets](docs/AUTOMATIC_RESETS.md) for the policy,
-query schedule, compatibility requirements and limitations. The hook has been tested
-against a fake Codex server, and installer checks use temporary homes. Live redemption
-and Codex hook activation remain unverified.
+The feature requires a compatible, signed-in Codex CLI. The installer uses `hooks/list`
+and `config/batchWrite` to trust the exact installed definitions after checking the saved
+opt-in and payloads. It preserves unrelated hook trust and explicit disabled settings.
+If the API is unavailable or verification fails, installation completes with a warning
+and instructions to trust the two pack hooks in Codex's Hooks settings or CLI `/hooks`.
+Review only the listed `UserPromptSubmit` and `PostToolUse` entries from your user
+`hooks.json`; use their individual Trust controls. A disabled hook also needs you to
+enable it. Administrative restrictions still apply.
+
+See [Automatic resets](docs/AUTOMATIC_RESETS.md) for the policy, query schedule and
+compatibility requirements. Offline tests use fake servers and temporary homes.
+Live redemption and Codex hook activation remain unverified.
 
 ## Safety contract
 
@@ -184,7 +195,8 @@ The installers follow these rules:
   markers, ownership, roles, and skills, and computes every change before committing anything.
   Any conflict or unresolved instruction or automatic-reset choice blocks the entire apply
   preflight. Planning and applying never run the quota hook, query account usage, or redeem
-  a reset.
+  a reset. Dry runs make no Codex API calls. Only a successful opted-in global apply
+  attempts the scoped hook-trust configuration update after saving installation state.
 - When `kit.json` advertises an agent catalog, preflight checks its schema, role names, and
   model/effort agreement with the source role files. Missing or inconsistent role payloads block
   the whole apply. Legacy manifests without a catalog remain supported. This is an offline
@@ -196,8 +208,10 @@ The installers follow these rules:
 - Role files are copied byte for byte and tracked with content hashes, so line-ending conversion
   does not cause a false update on the next run.
 - User-modified files become conflicts and remain untouched.
-- Global `config.toml` is preserved unless `--global-defaults merge` or `--global-defaults replace`
-  is supplied. `merge` permits the kit to add or update defaults it owns but preserves a
+- Global model defaults are preserved unless `--global-defaults merge` or
+  `--global-defaults replace` is supplied. Opted-in reset management also authorizes
+  the scoped `hooks.state` trust update through Codex's API, with a configuration backup
+  and version check. `merge` permits the kit to add or update defaults it owns but preserves a
   pre-existing unmanaged model value, so it may retain the user's current model. `replace`
   explicitly opts into the kit-owned values. Check the effective runtime configuration after
   installation because session and app overrides can still take precedence. Without either

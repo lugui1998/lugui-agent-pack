@@ -1,6 +1,6 @@
 """Static planning of opt-in reset preferences and owned Codex hook entries.
 
-No hook, Codex command, authentication, usage request or redemption runs here.
+No hook, Codex command, authentication, usage request or redemption runs while planning.
 The source hook is loaded only to validate policy data through its pure API.
 """
 
@@ -102,6 +102,7 @@ def policy_api(source: Path):
 
 
 def prompt_policy(defaults: dict) -> dict | None:
+    print("Enabling automatic reset management installs its two hooks and attempts to trust those exact definitions through Codex.")
     print("Automatic resets may redeem an available reset using your saved policy. "
           "Installation does not check usage or redeem a reset.")
     print("Defaults: expire within 5 days; remaining quota 0% with a balance of at least 200 credits or 1% below that reserve; "
@@ -153,7 +154,8 @@ def validate_hooks(document: dict) -> dict:
     return hooks
 
 
-def plan_hooks(installer, record_type, source: Path, enabled: bool) -> None:
+def plan_hooks(installer, record_type, source: Path, policy: dict) -> None:
+    enabled = policy["enabled"]
     path = installer.home / "hooks.json"
     script = installer.home / "hooks" / "usage_quota_check.py"
     if not enabled and not any(
@@ -213,11 +215,20 @@ def plan_hooks(installer, record_type, source: Path, enabled: bool) -> None:
 
     if enabled:
         installer.plan_file("reset-hook-script", source, script)
+        payloads = [("reset-hook-script", str(script), installer.file_hash(source))]
         if launcher_source is not None:
+            launcher_payload = render_windows_launcher(launcher_source, executable, script, installer.home)
             installer.plan_file(
                 "reset-hook-launcher", launcher_source, launcher,
-                payload=render_windows_launcher(launcher_source, executable, script, installer.home),
+                payload=launcher_payload,
             )
+            payloads.append(("reset-hook-launcher", str(launcher), installer.sha_bytes(launcher_payload)))
+        from hook_trust import TrustIntent
+
+        installer.reset_trust_intent = TrustIntent(
+            json.dumps(policy, sort_keys=True), json.dumps(desired, sort_keys=True), tuple(payloads),
+        )
+        installer.action("TRUST", path, "after successful apply and state save, trust only these two owned reset hooks through the Codex API; no hook runs")
     elif script.exists():
         installer.notice(script, "disabled hook script is retained dormant; no script is executed during installation")
     if result == original:
@@ -294,6 +305,6 @@ def plan_automatic_resets(installer, record_type) -> None:
             installer.add_operation("UPDATE" if path.exists() else "ADD", path, "save explicit reset policy; preserve other preference keys; no reset is redeemed", write_preferences)
         else:
             installer.action("SKIP", path, "preserve the saved reset choice and parameters")
-        plan_hooks(installer, record_type, source, policy["enabled"])
+        plan_hooks(installer, record_type, source, policy)
     except (OSError, UnicodeError, ValueError, TypeError, KeyError, EOFError) as error:
         installer.conflict(path, f"automatic reset preflight failed: {error}")

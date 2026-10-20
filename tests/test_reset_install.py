@@ -93,11 +93,28 @@ class ResetInstallerTests(unittest.TestCase):
             module = importlib.util.module_from_spec(spec)
             stack.enter_context(patch.dict(sys.modules, {spec.name: module}))
             spec.loader.exec_module(module)
+            fixture_spec = importlib.util.spec_from_file_location("offline_trust_fixture", ROOT / "tests" / "support" / "fake_hook_trust_server.py")
+            fixture = importlib.util.module_from_spec(fixture_spec)
+            fixture_spec.loader.exec_module(fixture)
+            import hook_trust
+            self.trust_servers = []
+
+            def fake_server(command, home):
+                server = fixture.FakeTrustServer(command, home)
+                self.trust_servers.append(server)
+                if hasattr(self, "configure_trust_server"):
+                    self.configure_trust_server(server)
+                return server
+
+            stack.enter_context(patch.object(hook_trust, "TrustRpc", side_effect=fake_server))
             args = module.parse_args([
                 "--scope", scope, "--target-project", str(self.project),
                 "--instructions", "skip", "--skills", "skip", *arguments,
             ])
             installer = module.Installer(args)
+            self.last_installer = installer
+            if hasattr(self, "prepare_installer"):
+                self.prepare_installer(installer)
             self.assertEqual(installer.home, self.home)
             self.assertEqual(installer.project, self.project)
             code = installer.run()
@@ -149,11 +166,14 @@ class ResetInstallerTests(unittest.TestCase):
         self.assertFalse(self.preferences()["automaticResets"]["enabled"])
         self.assertFalse((self.home / "hooks.json").exists())
         self.assertFalse((self.home / "hooks").exists())
+        self.assertEqual(self.trust_servers, [])
 
     def test_enable_defaults_registers_only_production_hook(self):
         self.apply("--automatic-resets", "enable")
         self.assertEqual(self.preferences(), {"schemaVersion": 1, "automaticResets": DEFAULTS})
         self.assert_registration()
+        self.assertEqual(len(self.trust_servers), 1)
+        self.assertTrue(any(method == "config/batchWrite" for method, _ in self.trust_servers[0].calls))
         python_files = {path.relative_to(self.home).as_posix() for path in self.home.rglob("*.py")}
         self.assertEqual(python_files, {"hooks/usage_quota_check.py"})
         self.assertFalse(any(path.name == "tests" for path in self.home.rglob("*")))
@@ -338,12 +358,14 @@ class ResetInstallerTests(unittest.TestCase):
         self.assertIn("balance is below the reserve", stdout)
         self.assertIn("asks whether to use the reset or wait", stdout)
         self.assertIn("remain automatic", stdout)
+        self.assertIn("attempts to trust those exact definitions", stdout)
         self.assertEqual(self.preferences()["automaticResets"], DEFAULTS)
 
     def test_project_install_leaves_global_policy_and_hooks_untouched(self):
         self.apply("--automatic-resets", "enable", *CUSTOM_ARGS)
         before = snapshot(self.home)
         self.apply("--automatic-resets", "disable", scope="project")
+        self.assertEqual(self.trust_servers, [])
         after = snapshot(self.home)
         additions = set(after) - set(before)
         self.assertEqual(len(additions), 1)
@@ -357,6 +379,7 @@ class ResetInstallerTests(unittest.TestCase):
             with self.subTest(choice=choice):
                 code, stdout, stderr = self.invoke("--automatic-resets", choice, "--dry-run")
                 self.assertEqual(code, 0, stdout + stderr)
+                self.assertEqual(self.trust_servers, [])
                 self.assertFalse(self.home.exists())
                 self.assertEqual(list(self.project.iterdir()), [])
         self.apply("--automatic-resets", "enable", *CUSTOM_ARGS)
@@ -377,6 +400,7 @@ class ResetInstallerTests(unittest.TestCase):
         self.assertEqual(code, 2, stdout + stderr)
         self.assertIn("--automatic-resets enable or disable", stdout)
         self.assertFalse(self.home.exists())
+        self.assertEqual(self.trust_servers, [])
 
     def test_posix_uses_python_without_a_powershell_launcher(self):
         with patch.object(sys, "platform", "linux"):

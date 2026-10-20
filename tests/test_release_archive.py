@@ -55,12 +55,14 @@ class ReleaseArchiveTests(unittest.TestCase):
             shutil.copyfile(ROOT / ".gitattributes", repo / ".gitattributes")
             included = {
                 "kit.json", "AGENTS.md", "scripts/install.py",
-                "scripts/reset_install.py", "scripts/hooks/usage_quota_check.py",
+                "scripts/reset_install.py", "scripts/hook_trust.py",
+                "scripts/hooks/usage_quota_check.py",
                 "scripts/hooks/usage_quota_check.ps1",
             }
             excluded = {
                 "tests/README.md", "tests/test_usage_quota_check.py",
-                "tests/support/fake_codex_server.py", "tests/nested/fixture.json",
+                "tests/support/fake_codex_server.py", "tests/test_hook_trust.py",
+                "tests/support/fake_hook_trust_server.py", "tests/nested/fixture.json",
             }
             # Placeholders verify archive policy without executing any payload.
             for name in included | excluded:

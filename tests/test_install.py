@@ -40,6 +40,7 @@ class InstallerTests(unittest.TestCase):
         (kit / "scripts").mkdir(parents=True)
         shutil.copy2(INSTALLER, kit / "scripts" / "install.py")
         shutil.copy2(ROOT / "scripts" / "reset_install.py", kit / "scripts" / "reset_install.py")
+        shutil.copy2(ROOT / "scripts" / "hook_trust.py", kit / "scripts" / "hook_trust.py")
         shutil.copytree(ROOT / "scripts" / "hooks", kit / "scripts" / "hooks", ignore=shutil.ignore_patterns("__pycache__"))
         shutil.copy2(ROOT / "kit.json", kit / "kit.json")
         shutil.copy2(ROOT / "AGENTS.md", kit / "AGENTS.md")

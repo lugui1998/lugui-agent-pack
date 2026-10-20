@@ -13,6 +13,7 @@ From a repository checkout with Python 3.11+ (or 3.10 with `tomli` installed):
 python -I -B -m unittest discover -s tests -p "test_usage_quota_check.py" -v
 python -I -B -m unittest discover -s tests -p "test_install.py" -v
 python -I -B -m unittest discover -s tests -p "test_reset_install.py" -v
+python -I -B -m unittest discover -s tests -p "test_hook_trust.py" -v
 python -I -B -m unittest discover -s tests -p "test_release_archive.py" -v
 ```
 
@@ -21,6 +22,8 @@ replaces Codex executable discovery and process creation with a strict mapping t
 the fake server. Unexpected process commands fail; they cannot fall back to the
 real CLI. Each case uses a temporary `CODEX_HOME` and simulated account data.
 Installer tests use temporary homes and projects and never execute installed hooks.
+Hook-trust tests use simulated metadata and a separate fake trust server. They cover
+scoped trust writes and the opt-in gate without contacting the real Codex CLI.
 The Windows launcher execution test runs a rendered PowerShell launcher with a
 harmless temporary Python child, checking exact input bytes, arguments and exit status.
 It never loads the production quota hook.
@@ -33,10 +36,34 @@ it does not copy this directory. `.gitattributes` excludes `tests/` from Git rel
 archives. Full Git clones retain the tests for development.
 
 These tests establish behavior against simulated protocol responses. They do not
-establish compatibility with a live Codex service, hook trust behavior, or recovery
+establish compatibility with a live Codex service, live hook activation, or recovery
 after an operating-system crash or power loss.
 
 ## Recorded result
+
+### Installer hook trust
+
+On October 20, 2026, all 67 Windows installer, reset installer, hook-trust and
+release-archive tests passed outside the sandbox. The 13 trust tests also passed
+after the final protocol-parser changes. They cover exact hook matching, saved
+opt-in, unchanged payloads, backup and version checks, preservation of unrelated
+trust and disabled settings, manual fallback and bounded transport failures.
+Fresh decline, unresolved opt-in, dry runs, project installs and failed applies
+make no trust request.
+
+On Linux, the same selection finished with 59 passing cases and eight skips
+across the combined run and a focused rerun. Five cases require Windows; three
+require Git, which the cached container lacks. The initial container's non-executable
+temporary mount blocked one executable-discovery fixture. All 13 trust tests
+passed after allowing executable temporary files. The container retained its
+read-only source mount, disabled network and absence of Codex account files.
+No production code changed for that environment restriction.
+
+The tests used fake trust APIs and a local fixture process. They performed no live
+trust write, quota-hook execution or account/reset request. Independent static
+review found no outstanding security blocker. Live activation remains unverified.
+
+### Earlier reset-policy verification
 
 On October 20, 2026, with Python 3.10 on Windows:
 
