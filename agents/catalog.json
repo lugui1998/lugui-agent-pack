@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-10-01",
+  "reviewedAt": "2026-10-27",
   "targetCodex": "0.154.0-alpha.6.2",
   "main": {"model": "gpt-6-luna", "effort": "medium"},
   "defaultSubagent": {"model": "gpt-6-luna", "effort": "low"},
@@ -11,7 +11,9 @@
     {"name":"explorer","model":"gpt-6-luna","effort":"low","template":"extract","sandbox":"read-only","fallbacks":[],"description":"Luna: locate files, callers, configuration and evidence; return searched scope."},
     {"name":"deep_explorer","model":"gpt-6.1-sol","effort":"high","template":"investigate","sandbox":"read-only","fallbacks":["expert"],"description":"GPT-6.1 Sol: investigate ambiguous behavior and interactions across components."},
     {"name":"worker","model":"gpt-6-luna","effort":"medium","template":"implement","sandbox":"workspace-write","fallbacks":["standard_worker"],"description":"Luna: straightforward edits with understood behavior and targeted checks."},
-    {"name":"standard_worker","model":"gpt-6.1-sol","effort":"medium","template":"implement","sandbox":"workspace-write","fallbacks":["complex_worker"],"description":"GPT-6.1 Sol: bounded implementation needing interpretation of established patterns."},
+    {"name":"standard_worker","model":"gpt-6.1-terra","effort":"medium","template":"implement","sandbox":"workspace-write","fallbacks":["complex_worker"],"description":"GPT-6.1 Terra: scoped code fixes following established patterns with understood interfaces and targeted checks."},
+    {"name":"visual_worker","model":"gpt-6.1-terra","effort":"medium","template":"visual","sandbox":"workspace-write","fallbacks":[],"description":"GPT-6.1 Terra: visual understanding, UI checks and defined browser or desktop tasks grounded in observed evidence."},
+    {"name":"writing_worker","model":"gpt-6.1-terra","effort":"medium","template":"writing","sandbox":"workspace-write","fallbacks":[],"description":"GPT-6.1 Terra: concise documentation and revisions grounded in supplied material, audience and voice."},
     {"name":"complex_worker","model":"gpt-6.1-sol","effort":"high","template":"implement","sandbox":"workspace-write","fallbacks":["expert_worker"],"description":"GPT-6.1 Sol: complex implementation, difficult diagnosis and interacting behavior."},
     {"name":"expert_worker","model":"gpt-6-astra","effort":"high","template":"implement","sandbox":"workspace-write","fallbacks":[],"description":"Astra: hardest implementation or unresolved consequential failures; own diagnosis through validation."},
     {"name":"test_runner","model":"gpt-6-luna","effort":"low","template":"test","sandbox":"workspace-write","fallbacks":["test_diagnostician"],"description":"Luna: run known checks and collect failures; do not change source code."},

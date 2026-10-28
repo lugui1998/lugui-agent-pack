@@ -30,6 +30,36 @@ class AgentCatalogTests(unittest.TestCase):
             if data["name"] != "web_coordinator":
                 self.assertIn("Do not spawn agents", data["developer_instructions"])
 
+    def test_terra_roles_preserve_routing_and_explicit_fallbacks(self):
+        catalog = agents.load_catalog()
+        self.assertEqual(catalog["main"], {"model": "gpt-6-luna", "effort": "medium"})
+        self.assertEqual(catalog["defaultSubagent"], {"model": "gpt-6-luna", "effort": "low"})
+        roles = {role["name"]: role for role in catalog["roles"]}
+        terra_roles = {name for name, role in roles.items() if role["model"] == "gpt-6.1-terra"}
+        self.assertEqual(terra_roles, {"standard_worker", "visual_worker", "writing_worker"})
+        for name in terra_roles:
+            self.assertEqual(roles[name]["effort"], "medium")
+            self.assertEqual(roles[name]["sandbox"], "workspace-write")
+        self.assertEqual(roles["standard_worker"]["fallbacks"], ["complex_worker"])
+        self.assertIn("understood interfaces", roles["standard_worker"]["description"])
+        self.assertEqual(roles["visual_worker"]["template"], "visual")
+        self.assertEqual(roles["writing_worker"]["template"], "writing")
+        preserved_models = {
+            "gpt-6-luna": {"fast_scan", "explorer", "worker", "test_runner", "reviewer",
+                           "docs_researcher", "web_searcher", "web_coordinator"},
+            "gpt-6.1-sol": {"deep_explorer", "complex_worker", "test_diagnostician", "deep_reviewer",
+                           "security_reviewer", "planner", "web_verifier"},
+            "gpt-6-astra": {"expert_worker", "brainstorm", "expert"},
+        }
+        for model, names in preserved_models.items():
+            self.assertEqual({name for name, role in roles.items() if role["model"] == model}, names)
+        outputs = agents.render()
+        for name in ("visual_worker", "writing_worker"):
+            self.assertEqual(roles[name]["fallbacks"], [])
+            instructions = agents.tomllib.loads(outputs[f".codex/agents/{name}.toml"])["developer_instructions"]
+            self.assertIn("Do not spawn agents", instructions)
+            self.assertIn("No automatic model fallback is configured", instructions)
+
     def test_catalog_rejects_cycle_duplicate_and_invalid_profile(self):
         for mutation in ("cycle", "duplicate", "effort", "traversal", "depth", "boolean_depth"):
             with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:

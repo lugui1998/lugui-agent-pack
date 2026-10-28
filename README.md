@@ -1,6 +1,6 @@
 # Lugui Agent Pack
 
-Lugui Agent Pack helps Codex finish tasks with fewer tokens and shorter end-to-end runtimes. Luna handles simple work directly, then chooses the smallest model likely to complete a harder assignment well. Luna covers lookup and routine execution, GPT-6.1 Sol handles work needing deeper judgment, and Astra handles the hardest or unresolved consequential work.
+Lugui Agent Pack helps Codex finish tasks with fewer tokens and shorter end-to-end runtimes. Luna handles simple work directly, then chooses the smallest model likely to complete a harder assignment well. Luna covers lookup and routine execution. GPT-6.1 Terra handles scoped code fixes, visual and computer-use tasks, and writing from supplied material. GPT-6.1 Sol handles work needing deeper judgment, and Astra handles the hardest or unresolved consequential work.
 
 The pack routes work by the capability each task requires instead of sending every task to a large model. That keeps expensive context and stronger models for the assignments that need them, while smaller adequate models handle the rest. The goal is lower token use, faster completion, and preserved correctness.
 
@@ -10,7 +10,19 @@ This kit contains instruction-driven routing and scheduling policies. It does no
 
 ## Current status
 
-Version 1.3.1 routes roles previously assigned to GPT-5.6 Terra or GPT-6 Sol to GPT-6.1 Sol, while reserving Astra for the hardest cases. The main default remains Luna Medium; unnamed helpers use Luna Low. Role files pin both model and effort. Existing bounded Windows validation covers the previous role model assignments; this routing update has not been live-validated. See [validation/README.md](validation/README.md) for evidence and open limits.
+Version 1.4.0 assigns `standard_worker` to GPT-6.1 Terra and adds `visual_worker` and `writing_worker`, all at Medium reasoning effort. The main default remains Luna Medium; unnamed helpers use Luna Low. Role files pin both model and effort. Existing bounded Windows validation covers earlier model assignments; Terra task quality and comparative speed have not been live-validated. See [validation/README.md](validation/README.md) for evidence and open limits.
+
+## Where Terra fits
+
+| Role | Assign to Terra | Use another role when |
+|---|---|---|
+| `standard_worker` | Fix a known UI bug, adapt a parser to an established pattern, or make a bounded change with understood interfaces | Luna can perform a routine edit directly; Sol is needed for uncertain causes, interacting components or consequential design |
+| `visual_worker` | Interpret screenshots or diagrams, check a rendered UI against requirements, or complete a defined browser/desktop workflow | A simple lookup fits Luna; ambiguous workflows or persistent failures need Sol diagnosis |
+| `writing_worker` | Draft documentation or release notes from verified changes; revise supplied text for its audience and tone | A mechanical transformation fits Luna; missing evidence needs research, and ideation needs `brainstorm` |
+
+Visual assignments include allowed actions, exclusive session ownership and a fresh check of the resulting state. Writing assignments include source material and checks for facts, qualifications and voice. Code assignments include targeted regression checks. Tool access alone does not authorize external changes.
+
+This routing follows OpenAI's [model selection guidance](https://developers.openai.com/api/docs/guides/model-selection), checked on October 27, 2026. It is a workload fit hypothesis, not a benchmark ranking. Keep difficult investigation, security review, planning and consequential verification on Sol, and expert work and brainstorming on Astra. Compare representative Terra and Sol tasks using identical inputs and reasoning effort before expanding Terra's scope.
 
 ## Contents
 
@@ -37,6 +49,8 @@ git clone --recurse-submodules https://github.com/lugui1998/lugui-agent-pack.git
 ```
 
 Start a fresh task and verify its effective model. An explicit app/session selection or managed setting can override project defaults, and an already-running task may retain old role definitions.
+
+The Terra roles require Codex CLI 0.159.0 or later and account access to `gpt-6.1-terra`; see OpenAI's [model availability guidance](https://learn.chatgpt.com/docs/models). The older `targetCodex` metadata records the original validation target, not Terra compatibility.
 
 The project explicitly sets delegation depth to 2: main agent, optional coordinator, then leaf agents. The isolated CLI check and a live nested research run verified this setting. Omitting it left the coordinator without a spawn tool on the tested version. Leaf roles still receive a no-spawn instruction; this is a policy rule, not a separate permission boundary.
 

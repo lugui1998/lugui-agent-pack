@@ -21,6 +21,16 @@ For stronger assignments include the actual reason: uncertain shared state, conf
 
 Name inputs and outputs separately when a request involves existing documents and new reports. Do not ask a read-only specialist to create the parent's output files. For delegated coordination, retain the actual child IDs and tool results; invented task labels and parallel commands do not establish that other agents ran. If delegation is unavailable, return the ready briefs to the parent.
 
+## Terra assignments
+
+Use `standard_worker` for a scoped code fix with understood interfaces. Provide the observed failure, expected behavior, relevant established pattern, owned files and regression checks. Escalate uncertain causes or changes involving concurrency, security boundaries or interacting components to Sol.
+
+Use `visual_worker` for a defined visual or computer-use task. For example: inspect the rendered checkout form against supplied layout requirements and report mismatches, or fill an authorized draft record using a source document. Specify the browser/app session, allowed actions and desired saved state. The worker should verify the result with fresh UI evidence or readback; it must not submit or publish merely because the controls are available.
+
+Use `writing_worker` for text grounded in supplied material. For example: draft release notes from a verified change list, preserving known limitations and using the requested audience and tone. Specify the output file or response format. Verify factual support, qualifications and required content; return missing evidence to the parent instead of inventing it.
+
+All three Terra roles use Medium reasoning effort. Simple extraction and mechanical rewriting still fit Luna. The visual and writing roles have no automatic fallback; the parent must preserve the assignment's actual capabilities and permissions when choosing an alternative.
+
 ## Result
 
 ```text

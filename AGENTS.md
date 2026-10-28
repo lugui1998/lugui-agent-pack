@@ -1,6 +1,6 @@
 # Luna-led execution
 
-Use the fastest, least expensive model that can reliably meet the user's requirements. The kit's main-agent default is Luna; an explicit user/session model choice still wins. Use GPT-6.1 Sol for work needing more judgment than Terra but not Astra's top-end capability; reserve Astra for the hardest or still-unresolved consequential work. Preserve correctness while reducing completion time and total usage across the main agent and children.
+Use the fastest, least expensive model that can reliably meet the user's requirements. The kit's main-agent default is Luna; an explicit user/session model choice still wins. Use GPT-6.1 Terra for scoped code fixes, visual work and defined computer workflows, and writing grounded in supplied material. Use GPT-6.1 Sol for complex work and deeper judgment; reserve Astra for the hardest or still-unresolved consequential work. Preserve correctness while reducing completion time and total usage across the main agent and children.
 
 ## Route by required judgment
 
@@ -14,7 +14,9 @@ When the user explicitly asks to plan, brainstorm with the AI, suggest ideas, ex
 |---|---|
 | Bounded extraction, file/symbol lookup | `fast_scan` (Luna, none) or `explorer` (Luna) |
 | Straightforward edits with understood behavior | `worker` (Luna) |
-| Bounded implementation requiring interpretation | `standard_worker` (GPT-6.1 Sol) |
+| Scoped code fixes following established patterns, with understood interfaces | `standard_worker` (GPT-6.1 Terra, medium) |
+| Visual interpretation, UI checks and defined browser or desktop workflows | `visual_worker` (GPT-6.1 Terra, medium) |
+| Drafting and revising concise text from supplied material | `writing_worker` (GPT-6.1 Terra, medium) |
 | Complex coding and interacting behavior | `complex_worker` (GPT-6.1 Sol) |
 | Hardest implementation or unresolved consequential failure | `expert_worker` (Astra) |
 | Known checks and failure capture | `test_runner` (Luna) |
@@ -32,6 +34,10 @@ When the user explicitly asks to plan, brainstorm with the AI, suggest ideas, ex
 
 Custom role files pin their model and effort. Select the appropriate named role; do not assume a spawn override will replace a pinned setting. Keep the role's assigned scope and tool permissions intact.
 
+Choose Terra when its visual, computer-use or writing strengths fit the assignment, or a scoped code fix needs interpretation of an established pattern. Keep simple extraction, mechanical rewrites, known test runs and routine edits on Luna. Do not infer difficulty from file count or task length: uncertain root causes, interacting components, concurrency, security boundaries and consequential design decisions belong with the appropriate Sol specialist or Astra expert.
+
+For visual work, supply the target screen or artifact, desired outcome, allowed actions and explicit checks. Prefer the internal browser unless a required capability is unavailable there. Give one agent ownership of the browser/app session and verify the resulting state with a fresh screenshot, DOM inspection or saved-record readback. For writing, supply sources, audience, tone and deliverable; verify facts and qualifications as well as readability. For scoped code fixes, run targeted regression checks. These Terra routes are starting points, not measured performance guarantees; compare accepted results, retries, completion time and total usage on equivalent tasks before broadening them.
+
 On the validated CLI, full-history forks inherit the parent agent type and reject an explicit `agent_type`. Select a named role with a focused child context and a sufficient brief; do not combine `agent_type` with `fork_context: true`.
 
 ## Escalation and availability
@@ -44,6 +50,7 @@ On the validated CLI, full-history forks inherit the parent agent type and rejec
 - Search tool names for the specific action before broad description searches. Return bounded matching names and descriptions; avoid dumping the whole tool catalog into context.
 - Resolve specialist disagreement through decisive evidence or an appropriately capable specialist. Preserve caveats in the final answer.
 - If the bounded Luna roles are unavailable, use `explorer` for extraction or `docs_researcher` for research. Other availability alternatives: `worker` -> `standard_worker` -> `complex_worker` -> `expert_worker`; `reviewer` -> `deep_reviewer` -> `expert`; `planner`, `deep_explorer`, `security_reviewer`, `web_verifier` -> `expert`; `test_runner` -> `test_diagnostician`. These are availability alternatives, not a mandatory reasoning ladder. Check that scope, tools and capability still fit. Report unavailable required expertise instead of silently substituting a weaker model.
+- `visual_worker` and `writing_worker` have no automatic fallback to an unrelated role. If unavailable, the main agent may handle the assignment when capable or assign a suitable available model with the same scope, tools and permissions. Return visual ambiguity or persistent workflow failures for Sol diagnosis; return missing writing evidence for research, conflicting claims for verification, and concept development for `brainstorm`. A missing browser or app connection is an environment limitation, not a reason to switch models.
 
 ## Start ready work in parallel
 
