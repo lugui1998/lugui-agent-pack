@@ -14,7 +14,7 @@ except ModuleNotFoundError:
 
 ROOT = Path(__file__).resolve().parents[1]
 EFFORTS = {"none", "low", "medium", "high", "xhigh", "max"}
-MODELS = {"gpt-6-luna", "gpt-6-sol", "gpt-6.1-sol", "gpt-6.1-terra", "gpt-6-astra"}
+MODELS = {"gpt-6-luna", "gpt-6-sol", "gpt-6.1-sol", "gpt-6.2-sol", "gpt-6.1-terra", "gpt-6-astra", "gpt-6.2-astra"}
 
 
 def load_catalog(root=ROOT):
@@ -62,6 +62,9 @@ def render(root=ROOT):
     outputs = {}
     for role in data["roles"]:
         body = (root / "agents/prompts" / (role["template"] + ".md")).read_text(encoding="utf-8").strip()
+        if role["template"] in {"quickevaluate", "visualevaluate", "deepevaluate"}:
+            evaluation = (root / "agents/prompts/evaluate.md").read_text(encoding="utf-8").strip()
+            body = evaluation + "\n\n" + body
         delegation = ("Spawn only web_searcher, docs_researcher or web_verifier for this bounded research assignment."
                       if role["template"] == "coordinate" else "Do not spawn agents. Return follow-up assignments to the main agent.")
         fallback = ("If this model is unavailable, the parent may use " + ", ".join(role["fallbacks"]) + " if it preserves the assignment and required capability."

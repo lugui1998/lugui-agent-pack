@@ -1,6 +1,6 @@
 # Lugui Agent Pack
 
-Lugui Agent Pack helps Codex finish tasks with fewer tokens and shorter end-to-end runtimes. Luna handles simple work directly, then chooses the smallest model likely to complete a harder assignment well. Luna covers lookup and routine execution. GPT-6.1 Terra handles scoped code fixes, visual and computer-use tasks, and writing from supplied material. GPT-6.1 Sol handles work needing deeper judgment, and Astra handles the hardest or unresolved consequential work.
+Lugui Agent Pack helps Codex finish tasks with fewer tokens and shorter end-to-end runtimes. Luna handles simple work directly, then chooses the smallest model likely to complete a harder assignment well. Luna covers lookup and routine execution. GPT-6.1 Terra handles scoped code fixes, visual and computer-use tasks, and writing from supplied material. GPT-6.2 Sol handles work needing deeper judgment, and GPT-6.2 Astra handles the hardest or unresolved consequential work.
 
 The pack routes work by the capability each task requires instead of sending every task to a large model. That keeps expensive context and stronger models for the assignments that need them, while smaller adequate models handle the rest. The goal is lower token use, faster completion, and preserved correctness.
 
@@ -10,19 +10,31 @@ This kit contains instruction-driven routing and scheduling policies. It does no
 
 ## Current status
 
-Version 1.4.0 assigns `standard_worker` to GPT-6.1 Terra and adds `visual_worker` and `writing_worker`, all at Medium reasoning effort. The main default remains Luna Medium; unnamed helpers use Luna Low. Role files pin both model and effort. Existing bounded Windows validation covers earlier model assignments; Terra task quality and comparative speed have not been live-validated. See [validation/README.md](validation/README.md) for evidence and open limits.
+Version 1.5.0 updates the Sol and Astra roles to GPT-6.2 and adds an advisor and three evaluator presets. The main default is Luna Medium, and unnamed helpers use Luna Low. Role files pin both model and effort. See the [changelog](CHANGELOG.md) for release changes and [validation notes](validation/README.md) for evidence and limitations.
 
 ## Where Terra fits
 
 | Role | Assign to Terra | Use another role when |
 |---|---|---|
-| `standard_worker` | Fix a known UI bug, adapt a parser to an established pattern, or make a bounded change with understood interfaces | Luna can perform a routine edit directly; Sol is needed for uncertain causes, interacting components or consequential design |
-| `visual_worker` | Interpret screenshots or diagrams, check a rendered UI against requirements, or complete a defined browser/desktop workflow | A simple lookup fits Luna; ambiguous workflows or persistent failures need Sol diagnosis |
+| `standard_worker` | Fix a known UI bug, adapt a parser to an established pattern, or make a bounded change with understood interfaces | Luna can perform a routine edit directly; GPT-6.2 Sol is needed for uncertain causes, interacting components or consequential design |
+| `visual_worker` | Interpret screenshots or diagrams, check a rendered UI against requirements, or complete a defined browser/desktop workflow | A simple lookup fits Luna; ambiguous workflows or persistent failures need GPT-6.2 Sol diagnosis |
 | `writing_worker` | Draft documentation or release notes from verified changes; revise supplied text for its audience and tone | A mechanical transformation fits Luna; missing evidence needs research, and ideation needs `brainstorm` |
 
 Visual assignments include allowed actions, exclusive session ownership and a fresh check of the resulting state. Writing assignments include source material and checks for facts, qualifications and voice. Code assignments include targeted regression checks. Tool access alone does not authorize external changes.
 
-This routing follows OpenAI's [model selection guidance](https://developers.openai.com/api/docs/guides/model-selection), checked on October 27, 2026. It is a workload fit hypothesis, not a benchmark ranking. Keep difficult investigation, security review, planning and consequential verification on Sol, and expert work and brainstorming on Astra. Compare representative Terra and Sol tasks using identical inputs and reasoning effort before expanding Terra's scope.
+This routing follows OpenAI's [model selection guidance](https://developers.openai.com/api/docs/guides/model-selection), checked on October 27, 2026. It is a workload fit hypothesis, not a benchmark ranking. Keep difficult investigation, security review, planning and consequential verification on GPT-6.2 Sol, and expert work and brainstorming on GPT-6.2 Astra. Compare representative Terra and Sol tasks using identical inputs and reasoning effort before expanding Terra's scope.
+
+Evaluation has three levels, selected by the evidence needed rather than run automatically in sequence:
+
+| Preset | Model / effort | Scope |
+|---|---|---|
+| `quick_evaluator` | Luna / Medium | Timely snippet, log and short service checks; actionable local critique |
+| `visual_evaluator` | Terra / Medium | Actual images, screenshots, renders and visual media compared with criteria |
+| `evaluator` | GPT-6.2 Sol / High | Deep integrated critique and interactive UI/UX, API, mobile/debugger and file validation |
+
+All three share criteria, findings and targeted retesting rules. Workers can submit early artifacts directly; the parent retains scheduling and final acceptance. Evaluators may create assigned test evidence or operate authorized test state, but do not edit implementation or deliverables. Assigned acceptance gates require current evidence for every required criterion before a successful final response. Blocked checks and exhausted review budgets never imply a pass. Routine reviews stay with existing reviewer roles. Evaluation quality, active-tool workflows and efficiency have not been live-benchmarked. See [evaluation assignments](docs/ASSIGNMENTS.md#evaluation-assignments-and-checkpoints).
+
+The `advisor` preset uses GPT-6.2 Astra High, the pack's highest-capability configured tier, for focused on-demand consultation. Agents can ask for recommendations, alternatives and tradeoffs while retaining ownership of their work. Advice neither approves deliverables nor bypasses evaluator gates. The parent creates or reactivates the advisor when needed; routine choices stay local. There is no automatic weaker-model fallback. Its effectiveness has not been live-benchmarked.
 
 ## Contents
 

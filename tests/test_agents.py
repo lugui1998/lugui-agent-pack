@@ -25,7 +25,8 @@ class AgentCatalogTests(unittest.TestCase):
                 self.assertEqual(data["agents"]["max_depth"], 2)
                 continue
             self.assertIn(data["model_reasoning_effort"], agents.EFFORTS)
-            if "worker" not in data["name"] and not data["name"].startswith("test_"):
+            if ("worker" not in data["name"] and not data["name"].startswith("test_")
+                    and data["name"] not in {"quick_evaluator", "visual_evaluator", "evaluator"}):
                 self.assertEqual(data["sandbox_mode"], "read-only")
             if data["name"] != "web_coordinator":
                 self.assertIn("Do not spawn agents", data["developer_instructions"])
@@ -36,7 +37,7 @@ class AgentCatalogTests(unittest.TestCase):
         self.assertEqual(catalog["defaultSubagent"], {"model": "gpt-6-luna", "effort": "low"})
         roles = {role["name"]: role for role in catalog["roles"]}
         terra_roles = {name for name, role in roles.items() if role["model"] == "gpt-6.1-terra"}
-        self.assertEqual(terra_roles, {"standard_worker", "visual_worker", "writing_worker"})
+        self.assertEqual(terra_roles, {"standard_worker", "visual_worker", "writing_worker", "visual_evaluator"})
         for name in terra_roles:
             self.assertEqual(roles[name]["effort"], "medium")
             self.assertEqual(roles[name]["sandbox"], "workspace-write")
@@ -46,10 +47,10 @@ class AgentCatalogTests(unittest.TestCase):
         self.assertEqual(roles["writing_worker"]["template"], "writing")
         preserved_models = {
             "gpt-6-luna": {"fast_scan", "explorer", "worker", "test_runner", "reviewer",
-                           "docs_researcher", "web_searcher", "web_coordinator"},
-            "gpt-6.1-sol": {"deep_explorer", "complex_worker", "test_diagnostician", "deep_reviewer",
-                           "security_reviewer", "planner", "web_verifier"},
-            "gpt-6-astra": {"expert_worker", "brainstorm", "expert"},
+                           "docs_researcher", "web_searcher", "web_coordinator", "quick_evaluator"},
+            "gpt-6.2-sol": {"deep_explorer", "complex_worker", "test_diagnostician", "deep_reviewer",
+                           "security_reviewer", "planner", "web_verifier", "evaluator"},
+            "gpt-6.2-astra": {"expert_worker", "brainstorm", "expert", "advisor"},
         }
         for model, names in preserved_models.items():
             self.assertEqual({name for name, role in roles.items() if role["model"] == model}, names)
@@ -59,6 +60,43 @@ class AgentCatalogTests(unittest.TestCase):
             instructions = agents.tomllib.loads(outputs[f".codex/agents/{name}.toml"])["developer_instructions"]
             self.assertIn("Do not spawn agents", instructions)
             self.assertIn("No automatic model fallback is configured", instructions)
+
+    def test_evaluation_levels_share_contract_and_preserve_capabilities(self):
+        roles = {r["name"]: r for r in agents.load_catalog()["roles"]}
+        outputs = agents.render()
+        contract = (ROOT / "agents/prompts/evaluate.md").read_text(encoding="utf-8").strip()
+        profiles = {
+            "quick_evaluator": ("gpt-6-luna", "medium", "quickevaluate"),
+            "visual_evaluator": ("gpt-6.1-terra", "medium", "visualevaluate"),
+            "evaluator": ("gpt-6.2-sol", "high", "deepevaluate"),
+        }
+        for name, (model, effort, template) in profiles.items():
+            with self.subTest(role=name):
+                self.assertEqual(roles[name]["template"], template)
+                self.assertEqual(roles[name]["fallbacks"], [])
+                rendered = agents.tomllib.loads(outputs[f".codex/agents/{name}.toml"])
+                self.assertEqual(rendered["model"], model)
+                self.assertEqual(rendered["model_reasoning_effort"], effort)
+                self.assertEqual(rendered["sandbox_mode"], "workspace-write")
+                instructions = rendered["developer_instructions"]
+                self.assertIn("Do not spawn agents", instructions)
+                self.assertEqual(instructions.count(contract), 1)
+                specific = (ROOT / f"agents/prompts/{template}.md").read_text(encoding="utf-8").strip()
+                self.assertIn(specific, instructions)
+                self.assertLess(instructions.index(contract), instructions.index(specific))
+
+    def test_advisor_is_read_only_leaf_without_evaluation_contract(self):
+        role = next(r for r in agents.load_catalog()["roles"] if r["name"] == "advisor")
+        self.assertEqual(role["template"], "advise")
+        self.assertEqual(role["fallbacks"], [])
+        rendered = agents.tomllib.loads(agents.render()[".codex/agents/advisor.toml"])
+        self.assertEqual(rendered["model"], "gpt-6.2-astra")
+        self.assertEqual(rendered["model_reasoning_effort"], "high")
+        self.assertEqual(rendered["sandbox_mode"], "read-only")
+        instructions = rendered["developer_instructions"]
+        self.assertIn("Do not spawn agents", instructions)
+        self.assertIn((ROOT / "agents/prompts/advise.md").read_text(encoding="utf-8").strip(), instructions)
+        self.assertNotIn((ROOT / "agents/prompts/evaluate.md").read_text(encoding="utf-8").strip(), instructions)
 
     def test_catalog_rejects_cycle_duplicate_and_invalid_profile(self):
         for mutation in ("cycle", "duplicate", "effort", "traversal", "depth", "boolean_depth"):

@@ -160,7 +160,7 @@ class EvaluateTests(unittest.TestCase):
         self.assertEqual(2, sanitized["count"])
 
     def test_command_is_isolated_and_variant_override_is_explicit(self):
-        command = evaluate.command_for(Path("C:/temp/work"), "do it", {"model": "gpt-6-astra", "effort": "high", "config": ["agents.enabled=false"]})
+        command = evaluate.command_for(Path("C:/temp/work"), "do it", {"model": "gpt-6.2-astra", "effort": "high", "config": ["agents.enabled=false"]})
         self.assertIn("--ignore-user-config", command)
         self.assertNotIn("--ignore-rules", command)
         self.assertIn("--approve-for-me", command)
@@ -275,7 +275,7 @@ class EvaluateTests(unittest.TestCase):
             workspace = Path(temp)
             (workspace / ".codex").mkdir()
             (workspace / ".codex" / "config.toml").write_text('model = "gpt-6-luna"\nmodel_reasoning_effort = "medium"\n', encoding="utf-8")
-            evidence = {"status": "COMPLETE", "records": [{"status": "FOUND", "thread_id": "root", "turn_context_model": "gpt-6-astra",
+            evidence = {"status": "COMPLETE", "records": [{"status": "FOUND", "thread_id": "root", "turn_context_model": "gpt-6.2-astra",
                         "turn_context_effort": "UNKNOWN", "copied_agents_complete_presence": True}]}
             expected = evaluate.expected_configuration(workspace, {})
             (workspace / ".codex" / "config.toml").write_text('model = "mutated"\n', encoding="utf-8")
@@ -290,7 +290,7 @@ class EvaluateTests(unittest.TestCase):
         expected = {"expected_main_model": "gpt-6-luna", "expected_main_reasoning_effort": "medium"}
         evidence = {"status": "COMPLETE", "records": [
             {"status": "FOUND", "thread_id": "root", "turn_context_model": "gpt-6-luna", "turn_context_effort": "medium", "copied_agents_complete_presence": True},
-            {"status": "FOUND", "thread_id": "child", "turn_context_model": "gpt-6-astra", "turn_context_effort": "high", "copied_agents_complete_presence": True},
+            {"status": "FOUND", "thread_id": "child", "turn_context_model": "gpt-6.2-astra", "turn_context_effort": "high", "copied_agents_complete_presence": True},
         ]}
         validity = evaluate.configuration_validity(expected, evidence, "root")
         self.assertTrue(validity["valid"])

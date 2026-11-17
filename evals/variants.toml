@@ -1,6 +1,6 @@
 [variants.baseline]
 source = "evals/baseline"
-model = "gpt-6-astra"
+model = "gpt-6.2-astra"
 effort = "ultra"
 
 [variants.current]
@@ -20,6 +20,6 @@ model_reasoning_effort = "max"
 
 [variants.single-strong]
 source = "."
-model = "gpt-6-astra"
+model = "gpt-6.2-astra"
 effort = "high"
 config = ["agents.enabled=false"]

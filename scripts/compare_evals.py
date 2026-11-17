@@ -14,9 +14,11 @@ RATES = {
     "gpt-5.6-terra": {"input": 50, "cached": 5, "output": 300},
     "gpt-6-sol": {"input": 100, "cached": 10, "output": 500},
     "gpt-6-astra": {"input": 250, "cached": 25, "output": 1250},
+    "gpt-6.2-sol": {"input": 100, "cached": 10, "output": 500},
+    "gpt-6.2-astra": {"input": 400, "cached": 20, "output": 2000},
 }
-RATE_NOTE = {"kind": "STANDARD reference credits, not actual account usage, USD, or cost",
-             "source": "https://learn.chatgpt.com/docs/pricing", "checked": "2026-09-12", "per": "1M tokens"}
+RATE_NOTE = {"kind": "STANDARD reference credits, not actual account usage, USD, or cost; scaled at 50 credits per API dollar",
+             "source": "https://openai.com/index/introducing-gpt-6-2-astra-sol/", "checked": "2026-11-17", "per": "1M tokens"}
 
 
 def result_paths(inputs: list[Path]) -> list[Path]:
